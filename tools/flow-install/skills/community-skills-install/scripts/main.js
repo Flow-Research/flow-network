@@ -1,9 +1,13 @@
 #!/usr/bin/env node
 
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
+import { execSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const COMMUNITY_REPO = 'https://github.com/sickn33/antigravity-awesome-skills.git';
 const COMMUNITY_DIR = path.join(os.homedir(), 'antigravity-skills');

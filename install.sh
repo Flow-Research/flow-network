@@ -6,7 +6,8 @@ FLOW_INSTALL_DIR="${FLOW_INSTALL_DIR:-$HOME/flow-network}"
 FLOW_NONINTERACTIVE="${FLOW_NONINTERACTIVE:-0}"
 FLOW_SKIP_SUBPROJECTS="${FLOW_SKIP_SUBPROJECTS:-0}"
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_SOURCE="${BASH_SOURCE[0]-$0}"
+SCRIPT_DIR="$(cd -- "$(dirname -- "$SCRIPT_SOURCE")" && pwd)"
 LOCAL_SOURCE=0
 
 if [[ -d "$SCRIPT_DIR/tools/flow-install" && -d "$SCRIPT_DIR/Jarvis" ]]; then
