@@ -47,6 +47,18 @@ jobs:
           uv tool install --force ./Jarvis
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
+      - name: Seed OpenCode config
+        run: |
+          mkdir -p "$HOME/.config/opencode"
+          cat > "$HOME/.config/opencode/opencode.json" <<'EOF'
+          {
+            "$schema": "https://opencode.ai/config.json",
+            "skills": {
+              "paths": []
+            }
+          }
+          EOF
+
       - name: Prepare fixture repos
         run: |
           cp -R tests/fixtures/harness-smoke/base /tmp/flow-harness-base
