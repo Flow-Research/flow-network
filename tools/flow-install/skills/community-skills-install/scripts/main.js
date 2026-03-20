@@ -340,6 +340,10 @@ Examples:
       strict: true
     };
     persistCommunityInstall(communitySkills);
+    const regResult = registerSkills();
+    if (regResult.registered) {
+      console.log('✅ Refreshed agent registration');
+    }
     console.log(`   Total skills in ${INSTALL_DIR}: ${total}`);
     console.log('\n✨ Done!');
     
