@@ -19,7 +19,7 @@ This skill enables you to:
 1. **Clone/Pull** the community skills repository (`~/antigravity-skills/`)
 2. **Browse Bundles** - View 26 curated skill bundles (Web Wizard, Security Engineer, etc.)
 3. **Filter Skills** - Select specific bundles or skill categories
-4. **Install Skills** - Copy selected skills to `~/.agents/skills/community/`
+4. **Install Skills** - Copy selected skills to `~/.agents/skills/`
 5. **Merge Catalog** - Add community entries to your `_catalog.md`
 6. **Validate** - Run skill-validate on new skills
 
@@ -139,7 +139,7 @@ The skill returns structured JSON:
 ## Notes
 
 - In bundle modes (`--all`, `--bundle`), skills are added to the catalog with `type: community` and `owner: community`
-- In `--full` mode, catalog merge is skipped (too many entries). Skills are discovered directly from `~/.agents/skills/`.
+- In `--full` mode, catalog merge is skipped (too many entries). Skills are discovered directly from `~/.agents/skills/` and inventory metadata is written to `~/.agents/community-install.json`.
 - Existing skills are skipped (not overwritten) to prevent conflicts with project skills
 - The community repo is stored at `~/antigravity-skills/` (persistent, user-managed)
 - Bundle modes require user confirmation. `--full` mode is non-interactive (designed for automated install scripts).

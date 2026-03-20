@@ -19,6 +19,7 @@ import {
   GLOBAL_SKILLS_DIR,
   GLOBAL_CLAUDE_MARKETPLACE,
   GLOBAL_CLAUDE_SETTINGS,
+  GLOBAL_OPENCODE_CONFIG,
   log,
 } from "./utils.mjs";
 
@@ -204,7 +205,9 @@ const updateClaudeSettings = async (skills) => {
 
   // Ensure extraKnownMarketplaces
   if (!existing.extraKnownMarketplaces) existing.extraKnownMarketplaces = {};
-  existing.extraKnownMarketplaces.flow_network = GLOBAL_CLAUDE_MARKETPLACE;
+  existing.extraKnownMarketplaces.flow_network = {
+    source: { source: "directory", path: GLOBAL_CLAUDE_MARKETPLACE }
+  };
 
   // Remove old marketplace references
   delete existing.extraKnownMarketplaces.duru_claude_plugins;
@@ -220,4 +223,71 @@ const updateClaudeSettings = async (skills) => {
 
   await ensureDir(path.dirname(settingsPath));
   await writeJson(settingsPath, existing);
+};
+
+// ---------------------------------------------------------------------------
+// OpenCode skill registration
+// ---------------------------------------------------------------------------
+
+export const registerOpenCodeSkills = async (projectRoot, { dryRun = false } = {}) => {
+  const config = await readJsonSafe(GLOBAL_OPENCODE_CONFIG);
+  if (!config) {
+    log.skip("No OpenCode config found at ~/.config/opencode/opencode.json");
+    return;
+  }
+
+  if (!config.skills) config.skills = {};
+  if (!Array.isArray(config.skills.paths)) config.skills.paths = [];
+
+  const normalizePath = async (candidate) => {
+    try {
+      return await fs.realpath(candidate);
+    } catch {
+      return path.resolve(candidate);
+    }
+  };
+
+  const normalizedExisting = [];
+  for (const existingPath of config.skills.paths) {
+    const normalized = await normalizePath(existingPath);
+    if (!normalizedExisting.includes(normalized)) normalizedExisting.push(normalized);
+  }
+
+  const paths = normalizedExisting;
+  let changed = false;
+
+  // Ensure global skills dir is registered
+  const normalizedGlobal = await normalizePath(GLOBAL_SKILLS_DIR);
+  if (!paths.includes(normalizedGlobal)) {
+    if (dryRun) {
+      log.dryRun(`Would add ${normalizedGlobal} to OpenCode skills.paths`);
+    } else {
+      paths.push(normalizedGlobal);
+      changed = true;
+    }
+  }
+
+  // Ensure project-local skills dir is registered (if it exists)
+  const projectSkillsDir = path.join(projectRoot, ".agents", "skills");
+  if (await pathExists(projectSkillsDir)) {
+    const normalizedProjectSkillsDir = await normalizePath(projectSkillsDir);
+    if (!paths.includes(normalizedProjectSkillsDir)) {
+      if (dryRun) {
+        log.dryRun(`Would add ${normalizedProjectSkillsDir} to OpenCode skills.paths`);
+      } else {
+        paths.push(normalizedProjectSkillsDir);
+        changed = true;
+      }
+    }
+  }
+
+  if (changed) {
+    config.skills.paths = paths;
+    await writeJson(GLOBAL_OPENCODE_CONFIG, config);
+    log.ok(`OpenCode skills.paths updated (${paths.length} paths)`);
+  } else if (!dryRun) {
+    config.skills.paths = paths;
+    await writeJson(GLOBAL_OPENCODE_CONFIG, config);
+    log.skip("OpenCode skills.paths already current");
+  }
 };

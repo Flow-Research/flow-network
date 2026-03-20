@@ -1,15 +1,15 @@
 # === Sub-project repos (separate git repos cloned into workspace) ===
-Flow/
-Focus/
-knowledge-base/
-anytype/
-anytype-automation/
-automerge-go/
-automerge-repo-quickstart/
-flow-demo/
-Flow-bkp/
-research projects/
-test/
+/Flow/
+/Focus/
+/knowledge-base/
+/anytype/
+/anytype-automation/
+/automerge-go/
+/automerge-repo-quickstart/
+/flow-demo/
+/Flow-bkp/
+/research projects/
+/test/
 
 # === Personal context (gitignored per personal-context-protocol) ===
 .jarvis/context/preferences.md

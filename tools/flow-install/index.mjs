@@ -4,14 +4,16 @@
  * flow-install — Idempotent installer for the Flow framework
  *
  * Installs skills, context vault, memory system, lifecycle scripts,
- * and AGENTS.md section into any project.
+ * and AGENTS.md section into any project. Registers skills with both
+ * Claude Code and OpenCode for cross-agent consistency.
  *
  * Usage:
  *   npx flow-install              # Full install (or upgrade)
  *   npx flow-install --yes        # Non-interactive (CI-safe)
  *   npx flow-install --skills     # Skills + Claude registration
  *   npx flow-install --memory     # Memory system
- *   npx flow-install --agents-md  # AGENTS.md merge
+ *   npx flow-install --agents-md  # Host AGENTS.md merge
+ *   npx flow-install --update-context-agents  # Update .jarvis/context/AGENTS.md managed block
  *   npx flow-install --dry-run    # Preview changes
  *   npx flow-install --version    # Show version
  */
@@ -21,15 +23,33 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { log, readJsonSafe, writeJson } from "./lib/utils.mjs";
 import { detectProject } from "./lib/detect.mjs";
-import { installSkills, registerClaudeSkills } from "./lib/skills.mjs";
+import { installSkills, registerClaudeSkills, registerOpenCodeSkills } from "./lib/skills.mjs";
 import { installProjectScripts, installScripts, patchPackageJson } from "./lib/scripts.mjs";
 import { scaffoldContext } from "./lib/context.mjs";
+import { CONTEXT_AGENTS_VERSION, syncContextAgents } from "./lib/context-agents.mjs";
 import { installMemory } from "./lib/memory.mjs";
 import { mergeAgentsMd } from "./lib/agents-md.mjs";
 import { resolveInstallPaths } from "./lib/install-paths.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TOTAL_STEPS = 8;
+
+const collectFlowCoreSkillNames = async () => {
+  const skillsDir = path.join(__dirname, "skills");
+  const entries = await fs.readdir(skillsDir, { withFileTypes: true }).catch(() => []);
+  const skills = [];
+
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const skillMd = path.join(skillsDir, entry.name, "SKILL.md");
+    try {
+      await fs.access(skillMd);
+      skills.push(entry.name);
+    } catch {}
+  }
+
+  return skills.sort();
+};
 
 // ---------------------------------------------------------------------------
 // CLI argument parsing
@@ -49,6 +69,7 @@ const dryRun = args.has("--dry-run");
 const yesAll = args.has("--yes");
 const targetArg = getArgValue("--target");
 const reconfigure = args.has("--reconfigure");
+const updateContextAgents = args.has("--update-context-agents");
 
 if (args.has("--target") && !targetArg) {
   console.error("Missing value for --target");
@@ -59,7 +80,7 @@ if (args.has("--target") && !targetArg) {
 const onlySkills = args.has("--skills");
 const onlyMemory = args.has("--memory");
 const onlyAgentsMd = args.has("--agents-md");
-const hasSpecific = onlySkills || onlyMemory || onlyAgentsMd;
+const hasSpecific = onlySkills || onlyMemory || onlyAgentsMd || updateContextAgents;
 const runAll = !hasSpecific;
 
 // ---------------------------------------------------------------------------
@@ -104,16 +125,17 @@ const main = async () => {
     }
   }
 
-  // ── Step 3: Register skills with Claude Code ────────────────────────────
+  // ── Step 3: Register skills with Claude Code + OpenCode ─────────────────
   if (runAll || onlySkills) {
-    log.step(3, TOTAL_STEPS, "Registering skills with Claude Code");
+    log.step(3, TOTAL_STEPS, "Registering skills with agents");
     await registerClaudeSkills({ dryRun });
+    await registerOpenCodeSkills(projectRoot, { dryRun });
   }
 
   // ── Step 4: Install lifecycle scripts to ~/.scripts/ ────────────────────
   if (runAll) {
     log.step(4, TOTAL_STEPS, "Installing lifecycle scripts to ~/.scripts/");
-    await installScripts(__dirname, { dryRun });
+    await installScripts({ dryRun });
     await installProjectScripts(projectRoot, {
       dryRun,
       scriptsDirRel: installPaths.scriptsDir,
@@ -135,6 +157,22 @@ const main = async () => {
     await scaffoldContext(projectRoot, {
       dryRun,
       contextDirRel: installPaths.contextDir,
+    });
+    projectInfo.existing.contextAgentsResult = await syncContextAgents(projectRoot, {
+      dryRun,
+      contextDirRel: installPaths.contextDir,
+      installPaths,
+      forceUpdate: false,
+      promptOnUpdate: !yesAll,
+    });
+  } else if (updateContextAgents) {
+    log.step(6, TOTAL_STEPS, "Updating .jarvis/context/AGENTS.md");
+    projectInfo.existing.contextAgentsResult = await syncContextAgents(projectRoot, {
+      dryRun,
+      contextDirRel: installPaths.contextDir,
+      installPaths,
+      forceUpdate: true,
+      promptOnUpdate: false,
     });
   }
 
@@ -158,7 +196,13 @@ const main = async () => {
   }
 
   // ── Write lockfile ──────────────────────────────────────────────────────
-  if (runAll && !dryRun) {
+  if ((runAll || updateContextAgents) && !dryRun) {
+    const flowCoreSkills = await collectFlowCoreSkillNames();
+    const previousCommunitySkills = projectInfo.existing.lockfile?.communitySkills || {
+      mode: "none",
+      expected: [],
+      strict: false,
+    };
     const lockfile = {
       version,
       timestamp: new Date().toISOString(),
@@ -167,12 +211,22 @@ const main = async () => {
       apps: projectInfo.apps.map((a) => a.dirName),
       gitOrg: projectInfo.gitOrg,
       components: {
+        ...(projectInfo.existing.lockfile?.components || {}),
         skills: true,
         claude: true,
+        opencode: true,
         scripts: true,
         context: true,
         memory: true,
         agentsMd: true,
+      },
+      flowCoreSkills,
+      communitySkills: previousCommunitySkills,
+      contextAgents: {
+        version: CONTEXT_AGENTS_VERSION,
+        templateHash: projectInfo.existing.contextAgentsResult?.templateHash || projectInfo.existing.lockfile?.contextAgents?.templateHash || null,
+        status: projectInfo.existing.contextAgentsResult?.status || projectInfo.existing.lockfile?.contextAgents?.status || "unknown",
+        path: `${installPaths.contextDir}/AGENTS.md`,
       },
       installPaths,
     };
@@ -188,10 +242,13 @@ const main = async () => {
     log.header("Installation complete");
     console.log("  Next steps:");
     console.log("    1. Review .jarvis/context/ and fill in project context files");
-    console.log("    2. Review .jarvis/context/scopes/_scopes.yaml and customize scopes");
-    console.log("    3. Review AGENTS.md Flow section");
-    console.log("    4. Commit: flow-install.lock.json, .jarvis/, AGENTS.md changes");
-    console.log("    5. Run: pnpm skills:register (to register project-specific skills)");
+    console.log("    2. Review .jarvis/context/AGENTS.md and add any project notes outside the Flow-managed block");
+    console.log("    3. Review .jarvis/context/scopes/_scopes.yaml and customize scopes");
+    console.log("    4. Review AGENTS.md Flow section");
+    console.log("    5. Re-run with --update-context-agents when you want to apply newer Flow protocol updates");
+    console.log("    6. Commit: flow-install.lock.json, .jarvis/, AGENTS.md changes");
+    console.log("    7. Run: pnpm skills:register (to sync project-specific skills and refresh agent registration)");
+    console.log("    8. Run: pnpm harness:verify");
     console.log("");
   }
 };

@@ -4,10 +4,11 @@
   "description": "Flow Network — agent harness for any project",
   "scripts": {
     "setup": "node scripts/setup-local.mjs",
-    "skills:validate": "node $HOME/.scripts/validate-skills.mjs",
-    "skills:register": "node $HOME/.scripts/register-skills.mjs",
-    "skills:register:claude": "node $HOME/.scripts/register-claude-skills.mjs",
-    "postinstall": "node $HOME/.scripts/sync-rules.mjs"
+    "skills:validate": "node scripts/flow/validate-skills.mjs",
+    "skills:register": "node scripts/flow/register-skills.mjs",
+    "skills:register:claude": "node scripts/flow/register-claude-skills.mjs",
+    "harness:verify": "node scripts/flow/verify-harness.mjs",
+    "postinstall": "node scripts/flow/sync-rules.mjs"
   },
   "packageManager": "pnpm@9.15.4+sha512.b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0"
 }

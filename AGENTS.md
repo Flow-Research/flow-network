@@ -74,35 +74,11 @@ Read `.jarvis/context/README.md` for the knowledge base protocol. Start with `pr
 
 > `FLOW_SKIP_SUBPROJECTS=true`
 
-### Skill Usage Protocol
+This repo is Flow-managed.
 
-- Check available skills before proceeding on every request.
+- Read `.jarvis/context/README.md`
+- Read `.jarvis/context/AGENTS.md`
 - Global skills: `~/.agents/skills/`
 - Project skills: `.agents/skills/` (if present)
-- Catalog: `.jarvis/context/skills/_catalog.md`
-- Register: use the project skill scripts (for example `pnpm skills:register` or `npm run skills:register`) | Validate: the matching `skills:validate` script
-
-### Context Vault
-
-- Project context: `.jarvis/context/`
-- Loading order: projects.md -> focus.md -> priorities.md -> goals.md -> decisions.md
-- `{{global}}` in context files is Jarvis CLI templating; treat as no-op
-
-### Memory System
-
-- Scope registry: `.jarvis/context/scopes/_scopes.yaml`
-- Scope resolution: most-specific match wins; user scope always highest priority
-- Memory types: fact, decision, preference, event
-- One file per scope per type
-
-### Technical Debt Tracking
-
-- Register: `.jarvis/context/technical-debt.md`
-- Per-epic: `.jarvis/context/specs/<epic>/tech_debt.md`
-- Required fields: ID, status, type, scope, context, impact, resolution, target, links
-
-### Conventions
-
-- No `.env` commits — use `.env.example`
-- Personal context in `.jarvis/context/private/<username>/` (gitignored)
+- If inside a sub-project, prefer its local `.jarvis/context/`
 <!-- flow:end -->

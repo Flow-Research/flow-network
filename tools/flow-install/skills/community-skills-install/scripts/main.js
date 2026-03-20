@@ -12,6 +12,7 @@ const __dirname = path.dirname(__filename);
 const COMMUNITY_REPO = 'https://github.com/sickn33/antigravity-awesome-skills.git';
 const COMMUNITY_DIR = path.join(os.homedir(), 'antigravity-skills');
 const INSTALL_DIR = path.join(os.homedir(), '.agents', 'skills');
+const COMMUNITY_METADATA_PATH = path.join(os.homedir(), '.agents', 'community-install.json');
 const CATALOG_PATH = path.join(__dirname, '..', '..', '..', '.jarvis', 'context', 'skills', '_catalog.md');
 
 const BUNDLES = {
@@ -90,6 +91,38 @@ function ensureDirectory(dir) {
   }
 }
 
+function writeCommunityMetadata(metadata) {
+  ensureDirectory(path.dirname(COMMUNITY_METADATA_PATH));
+  fs.writeFileSync(COMMUNITY_METADATA_PATH, JSON.stringify(metadata, null, 2) + '\n');
+}
+
+function updateProjectLockfile(communitySkills) {
+  const lockfilePath = path.join(process.cwd(), 'flow-install.lock.json');
+  if (!fs.existsSync(lockfilePath)) return false;
+
+  try {
+    const lockfile = JSON.parse(fs.readFileSync(lockfilePath, 'utf8'));
+    lockfile.communitySkills = communitySkills;
+    fs.writeFileSync(lockfilePath, JSON.stringify(lockfile, null, 2) + '\n');
+    return true;
+  } catch (err) {
+    console.warn('⚠️ Failed to update flow-install.lock.json:', err.message);
+    return false;
+  }
+}
+
+function persistCommunityInstall(communitySkills) {
+  const payload = {
+    ...communitySkills,
+    repoDir: COMMUNITY_DIR,
+    sourceDir: path.join(COMMUNITY_DIR, 'skills'),
+    installDir: INSTALL_DIR,
+    updatedAt: new Date().toISOString()
+  };
+  writeCommunityMetadata(payload);
+  updateProjectLockfile(payload);
+}
+
 function cloneOrPull() {
   console.log('\n📦 Checking community repository...\n');
   
@@ -147,6 +180,7 @@ function getAllSkills() {
   if (!fs.existsSync(skillsDir)) return [];
   return fs.readdirSync(skillsDir, { withFileTypes: true })
     .filter(e => e.isDirectory())
+    .filter(e => fs.existsSync(path.join(skillsDir, e.name, 'SKILL.md')))
     .map(e => e.name);
 }
 
@@ -299,6 +333,13 @@ Examples:
     }
     
     const total = copyResult.installed.length + copyResult.skipped.length;
+    const communitySkills = {
+      mode: 'full',
+      expected: [...allSkills].sort(),
+      expectedCount: allSkills.length,
+      strict: true
+    };
+    persistCommunityInstall(communitySkills);
     console.log(`   Total skills in ${INSTALL_DIR}: ${total}`);
     console.log('\n✨ Done!');
     
@@ -307,7 +348,8 @@ Examples:
       mode: 'full',
       installed: copyResult.installed.length,
       skipped: copyResult.skipped.length,
-      total: total
+      total: total,
+      metadata: COMMUNITY_METADATA_PATH
     }, null, 2));
     return;
   }
@@ -351,6 +393,14 @@ Examples:
       console.log('✅ Registered skills');
     }
   }
+
+  persistCommunityInstall({
+    mode: flags.all ? 'bundle-all' : 'explicit',
+    expected: [...skillsToInstall].sort(),
+    expectedCount: skillsToInstall.length,
+    strict: false,
+    bundles: bundlesToInstall
+  });
   
   console.log('\n✨ Done!');
   

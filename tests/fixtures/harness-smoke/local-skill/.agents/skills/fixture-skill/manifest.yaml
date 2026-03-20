@@ -1,0 +1,12 @@
+name: fixture-skill
+type: opencode
+version: 0.1.0
+owner: fixture
+status: active
+blast_radius: low
+description: Fixture skill used by CI to verify project-local Flow skill registration.
+permissions: []
+data_categories: [none]
+egress: []
+invoke: /fixture-skill
+location: .agents/skills/fixture-skill

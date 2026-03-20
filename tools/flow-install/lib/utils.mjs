@@ -82,6 +82,18 @@ export const promptWithDefault = async (label, defaultValue) => {
   }
 };
 
+export const promptConfirm = async (label, defaultValue = false) => {
+  const rl = readline.createInterface({ input, output });
+  const suffix = defaultValue ? "[Y/n]" : "[y/N]";
+  try {
+    const answer = (await rl.question(`${label} ${suffix}: `)).trim().toLowerCase();
+    if (!answer) return defaultValue;
+    return answer === "y" || answer === "yes";
+  } finally {
+    rl.close();
+  }
+};
+
 // ---------------------------------------------------------------------------
 // YAML helpers (minimal, no dependency)
 // ---------------------------------------------------------------------------
@@ -157,6 +169,7 @@ export const GLOBAL_SKILLS_DIR = path.join(homeDir, ".agents", "skills");
 export const GLOBAL_SCRIPTS_DIR = path.join(homeDir, ".scripts");
 export const GLOBAL_CLAUDE_MARKETPLACE = path.join(homeDir, ".agents", "claude-marketplace");
 export const GLOBAL_CLAUDE_SETTINGS = path.join(homeDir, ".claude", "settings.json");
+export const GLOBAL_OPENCODE_CONFIG = path.join(homeDir, ".config", "opencode", "opencode.json");
 
 // ---------------------------------------------------------------------------
 // Logging

@@ -193,8 +193,10 @@ const printSummary = async () => {
   log("");
   log("Next steps:");
   log("  1. Review .jarvis/context/local.md and fill in any missing values");
-  log("  2. Run `pnpm skills:register` to install project skills globally");
-  log("  3. Verify Jarvis CLI: `uv run jarvis status`");
+  log("  2. Review .jarvis/context/AGENTS.md and keep any custom notes outside the Flow-managed block");
+  log("  3. Run `pnpm skills:register` to sync project skills and refresh agent registration");
+  log("  4. Run `pnpm harness:verify` to confirm OpenCode + Claude parity");
+  log("  5. Verify Jarvis CLI: `uv run jarvis status`");
 };
 
 // ---------------------------------------------------------------------------

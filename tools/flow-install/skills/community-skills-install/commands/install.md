@@ -18,6 +18,7 @@ This command clones or pulls the community skills repository and installs select
 |------|-------|------|-------------|
 | `--bundle` | `-b` | string | Bundle name to install (can be specified multiple times) |
 | `--all` | `-a` | boolean | Install all community skills |
+| `--full` | `-f` | boolean | Install the full community inventory non-interactively |
 | `--check` | `-c` | boolean | Check for updates without installing |
 | `--list` | `-l` | boolean | List available bundles |
 | `--help` | `-h` | boolean | Show help |
@@ -42,6 +43,9 @@ install-skills --list
 
 # Install all skills
 install-skills --all
+
+# Install the full community inventory
+install-skills --full
 ```
 
 ## Exit Codes
@@ -58,5 +62,6 @@ install-skills --all
 
 - Requires `git` to be installed
 - Community repo cloned to `~/antigravity-skills/`
-- Skills installed to `~/.agents/skills/community/`
-- Always prompts user before installing (unless `--bundle` or `--all` specified)
+- Skills installed to `~/.agents/skills/`
+- Full-install inventory metadata written to `~/.agents/community-install.json`
+- Always prompts user before installing unless `--full` is specified

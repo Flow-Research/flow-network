@@ -28,37 +28,13 @@ const generateFlowSection = (installPaths) => `${FLOW_START}
 
 > \`FLOW_SKIP_SUBPROJECTS=true\`
 
-### Skill Usage Protocol
+This repo is Flow-managed.
 
-- Check available skills before proceeding on every request.
+- Read \`${installPaths.contextDir}/README.md\`
+- Read \`${installPaths.contextDir}/AGENTS.md\`
 - Global skills: \`~/.agents/skills/\`
 - Project skills: \`${installPaths.skillsDir}/\` (if present)
-- Catalog: \`${installPaths.contextDir}/skills/_catalog.md\`
-- Register: use the project skill scripts (for example \`pnpm skills:register\` or \`npm run skills:register\`) | Validate: the matching \`skills:validate\` script
-
-### Context Vault
-
-- Project context: \`${installPaths.contextDir}/\`
-- Loading order: projects.md -> focus.md -> priorities.md -> goals.md -> decisions.md
-- \`{{global}}\` in context files is Jarvis CLI templating; treat as no-op
-
-### Memory System
-
-- Scope registry: \`${installPaths.contextDir}/scopes/_scopes.yaml\`
-- Scope resolution: most-specific match wins; user scope always highest priority
-- Memory types: fact, decision, preference, event
-- One file per scope per type
-
-### Technical Debt Tracking
-
-- Register: \`${installPaths.contextDir}/technical-debt.md\`
-- Per-epic: \`${installPaths.contextDir}/specs/<epic>/tech_debt.md\`
-- Required fields: ID, status, type, scope, context, impact, resolution, target, links
-
-### Conventions
-
-- No \`.env\` commits — use \`.env.example\`
-- Personal context in \`${installPaths.contextDir}/private/<username>/\` (gitignored)
+- If inside a sub-project, prefer its local \`.jarvis/context/\`
 ${FLOW_END}`;
 
 // ---------------------------------------------------------------------------

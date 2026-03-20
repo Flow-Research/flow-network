@@ -8,10 +8,11 @@ It gives any repository a working AI operating layer with:
 - shared Flow skills installed globally
 - project-specific skills vendored in `.agents/skills/`
 - lifecycle scripts for skill registration, validation, and local setup
+- verification tooling for OpenCode and Claude Code parity
 - a scoped memory system in `.jarvis/context/scopes/`
 - personal context and private space under `.jarvis/context/`
 - a shared context vault and knowledge base protocol
-- root `AGENTS.md` instructions for humans and coding agents
+- a minimal root `AGENTS.md` pointer plus full protocol in `.jarvis/context/AGENTS.md`
 
 ## What You Get
 
@@ -25,6 +26,7 @@ After installation, a project gets this baseline structure:
 ├── .jarvis/
 │   └── context/
 │       ├── README.md
+│       ├── AGENTS.md
 │       ├── technical-debt.md
 │       ├── skills/_catalog.md
 │       ├── scopes/_scopes.yaml
@@ -33,11 +35,12 @@ After installation, a project gets this baseline structure:
 └── package.json scripts
     ├── skills:register
     ├── skills:validate
+    ├── harness:verify
     └── postinstall
 ```
 
 Shared/core skills are sourced from `tools/flow-install/skills/` and installed into `~/.agents/skills/`.
-Project-specific skills stay in each repo's `.agents/skills/` directory and are registered globally by the generated scripts.
+Project-specific skills stay in each repo's `.agents/skills/` directory and are copied into `~/.agents/skills/` by the generated scripts, which also refresh Claude Code and OpenCode registration.
 
 ## Installation
 
@@ -54,7 +57,7 @@ This bootstrap script:
 - clones `flow-network`
 - installs `jarvis`
 - runs `flow-install`
-- installs lifecycle scripts into `$HOME/.scripts`
+- installs repo-local lifecycle scripts plus global support directories
 - scaffolds the `.jarvis/context/` vault and memory system
 
 Useful environment variables:
@@ -96,7 +99,7 @@ This mode:
 - installs `jarvis`
 - fetches or updates a cached `flow-network` checkout used as installer source
 - prompts once per file type for install destinations unless `--yes` is used
-- patches the current repository with `AGENTS.md`, the context vault, memory scopes, project-local lifecycle scripts, and package scripts
+- patches the current repository with a minimal `AGENTS.md` pointer block, the context vault, memory scopes, project-local lifecycle scripts, and package scripts
 - skips community skill installation by default for a lean existing-project install
 
 You can also target another repo explicitly:
@@ -139,7 +142,8 @@ node /path/to/flow-network/tools/flow-install/index.mjs --yes
 
 ```bash
 pnpm skills:validate
-printf 'n\n' | pnpm skills:register
+pnpm skills:register
+pnpm harness:verify
 uv tool install --force ./Jarvis
 jarvis --help
 ```
@@ -149,7 +153,9 @@ jarvis --help
 | Command | Purpose |
 |---|---|
 | `pnpm skills:validate` | Validate shared skill source and catalog consistency |
-| `pnpm skills:register` | Install shared skills into `~/.agents/skills/` |
+| `pnpm skills:register` | Copy project-local skills into `~/.agents/skills/` and refresh OpenCode + Claude registration |
+| `pnpm skills:register:claude` | Rebuild Claude marketplace metadata from `~/.agents/skills/` |
+| `pnpm harness:verify` | Verify repo, OpenCode, and Claude harness parity |
 | `uv tool install --force ./Jarvis` | Install the local Jarvis CLI build |
 | `node tools/flow-install/index.mjs --yes` | Install Flow into the current repo |
 | `node tools/flow-install/index.mjs --dry-run` | Preview install changes |
@@ -202,9 +208,38 @@ These power:
 - `skills:register`
 - `skills:validate`
 - `skills:register:claude`
+- `harness:verify`
 - `postinstall`
 
 Global convenience scripts are still installed into `$HOME/.scripts/`, but committed project wiring uses repo-local script paths so CI stays portable.
+
+## Harness Verification
+
+The install is only considered complete when both agent surfaces resolve the same harness.
+
+Run:
+
+```bash
+pnpm skills:register
+pnpm harness:verify
+```
+
+`pnpm harness:verify` checks:
+
+- Flow section present in `AGENTS.md`
+- full Flow protocol present in `.jarvis/context/AGENTS.md`
+- core context and memory files under `.jarvis/context/`
+- generated lifecycle scripts exist
+- `package.json` wiring is present
+- `jarvis` is available in `PATH`
+- `~/.agents/skills/` exists
+- lockfile components are recorded
+- every shipped Flow core skill is installed globally and accessible to both OpenCode and Claude Code
+- OpenCode `skills.paths` includes the required paths
+- Claude marketplace and enabled plugin state exist
+- project-local skills, if present, are visible to both agents
+- community skills are checked from `flow-install.lock.json` using warn-or-strict behavior based on `communitySkills.strict`
+- `community-skills-install --full` is validated from persisted inventory metadata in `~/.agents/community-install.json` and, when available, `flow-install.lock.json`
 
 ### 5. Context vault
 
@@ -217,6 +252,7 @@ Every installed project gets:
 Important files:
 
 - `README.md` - knowledge base protocol
+- `AGENTS.md` - full Flow agent protocol for the installed repo
 - `technical-debt.md` - tracked debt register
 - `skills/_catalog.md` - local discovery layer
 - `scopes/_scopes.yaml` - memory scope registry
@@ -269,6 +305,13 @@ npm run skills:register
 
 
 depending on the repo
+
+If Flow ships a newer protocol block for `.jarvis/context/AGENTS.md`, reinstall will only notify you.
+It will not overwrite that file automatically. To apply the newer managed block explicitly:
+
+```bash
+node tools/flow-install/index.mjs --update-context-agents
+```
 
 4. Install Jarvis if they want the local CLI:
 

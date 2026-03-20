@@ -161,6 +161,7 @@ This directory is the canonical knowledge base for this project. AI agents, Jarv
 3. \`priorities.md\` — Priority ordering when conflicts arise
 4. \`goals.md\` — Current sprint and phase goals
 5. \`decisions.md\` — Settled architectural decisions
+6. \`AGENTS.md\` — Full Flow agent protocol for this installed repo
 
 ## Memory System
 
