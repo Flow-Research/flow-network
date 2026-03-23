@@ -9,11 +9,13 @@ import path from "node:path";
 import os from "node:os";
 
 const GLOBAL_SKILLS_DIR = path.join(os.homedir(), ".agents", "skills");
+const GLOBAL_COMMANDS_DIR = (process.env.XDG_BIN_HOME || "").trim() || path.join(os.homedir(), ".local", "bin");
 const GLOBAL_CLAUDE_MARKETPLACE = path.join(os.homedir(), ".agents", "claude-marketplace");
 const GLOBAL_CLAUDE_SETTINGS = path.join(os.homedir(), ".claude", "settings.json");
 const GLOBAL_OPENCODE_CONFIG = path.join(os.homedir(), ".config", "opencode", "opencode.json");
 const projectRoot = process.cwd();
 const projectSkillsRoot = path.join(projectRoot, ".agents", "skills");
+const RESERVED_SCRIPT_NAMES = new Set(["register-skills.mjs", "validate-skills.mjs", "register-claude-skills.mjs", "verify-harness.mjs", "sync-rules.mjs", "skills-root.mjs", "skills-root.config.json", "parse-frontmatter.mjs"]);
 
 const pathExists = async (p) => { try { await fs.access(p); return true; } catch { return false; } };
 const readFileSafe = async (p) => { try { return await fs.readFile(p, "utf8"); } catch (e) { if (e.code === "ENOENT") return null; throw e; } };
@@ -48,6 +50,44 @@ const parseFrontmatter = (content) => {
   const endIdx = content.indexOf("\n---", 3);
   if (endIdx === -1) return null;
   return { data: parseSimpleYaml(content.slice(4, endIdx)), body: content.slice(endIdx + 4).trim() };
+};
+const installSkillExecutables = async (skillDir) => {
+  const scriptsDir = path.join(skillDir, "scripts");
+  if (!(await pathExists(scriptsDir))) return 0;
+  await fs.mkdir(GLOBAL_COMMANDS_DIR, { recursive: true });
+  let installed = 0;
+  const entries = await fs.readdir(scriptsDir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (!entry.isFile()) continue;
+    if (entry.name.endsWith(".md")) continue;
+    if (path.extname(entry.name) !== "") continue;
+    if (RESERVED_SCRIPT_NAMES.has(entry.name)) {
+      console.log("  WARN skipping command shim " + entry.name + "; reserved by Flow lifecycle scripts");
+      continue;
+    }
+    const sourcePath = path.join(scriptsDir, entry.name);
+    const targetPath = path.join(GLOBAL_COMMANDS_DIR, entry.name);
+    try {
+      const existingStats = await fs.lstat(targetPath);
+      if (existingStats.isSymbolicLink()) {
+        const existingTarget = await fs.readlink(targetPath);
+        const resolvedExisting = path.resolve(path.dirname(targetPath), existingTarget);
+        if (resolvedExisting === sourcePath) {
+          installed += 1;
+          continue;
+        }
+      }
+      console.log("  WARN skipping command shim " + entry.name + "; " + GLOBAL_COMMANDS_DIR + "/" + entry.name + " already exists");
+      continue;
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
+    await fs.chmod(sourcePath, 0o755).catch(() => {});
+    await fs.symlink(sourcePath, targetPath);
+    console.log("  OK linked command shim " + entry.name);
+    installed += 1;
+  }
+  return installed;
 };
 
 const registerClaude = async () => {
@@ -140,6 +180,7 @@ const registerOpenCode = async () => {
 const run = async () => {
   await fs.mkdir(GLOBAL_SKILLS_DIR, { recursive: true });
   let copied = 0;
+  let commandShims = 0;
 
   if (await pathExists(projectSkillsRoot)) {
     const entries = await fs.readdir(projectSkillsRoot, { withFileTypes: true });
@@ -150,6 +191,7 @@ const run = async () => {
       const target = path.join(GLOBAL_SKILLS_DIR, entry.name);
       if (await pathExists(target)) await fs.rm(target, { recursive: true });
       await copyDir(skillDir, target);
+      commandShims += await installSkillExecutables(target);
       copied += 1;
       console.log("  OK copied " + entry.name);
     }
@@ -161,6 +203,7 @@ const run = async () => {
   const opencodePathCount = await registerOpenCode();
 
   console.log("Copied " + copied + " project skill(s) into " + GLOBAL_SKILLS_DIR);
+  console.log("Installed " + commandShims + " command shim(s) into " + GLOBAL_COMMANDS_DIR);
   console.log("Claude Code refreshed for " + claudeCount + " skill(s)");
   console.log("OpenCode skills.paths configured (" + opencodePathCount + " path(s))");
 };

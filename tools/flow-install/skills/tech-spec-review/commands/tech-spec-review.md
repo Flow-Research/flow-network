@@ -1,5 +1,5 @@
 ---
-description: Six-perspective engineering review for technical_spec.md files
+description: Seven-lens engineering review for technical_spec.md files with explicit simplicity and architecture gating
 argument-hint: "[quick] or path to technical_spec.md"
 ---
 
@@ -20,12 +20,12 @@ $ARGUMENTS
 ### No arguments → Full review
 
 **Opening:**
-"I'll conduct a comprehensive technical review of your specification using six expert perspectives. What's the path to your technical_spec.md file?"
+"I'll conduct a comprehensive technical review of your specification using seven expert lenses, including explicit simplicity and architecture review. What's the path to your technical_spec.md file?"
 
 ### `quick` → Abbreviated review
 
 1. Load technical_spec.md
-2. Run Backend Engineer + Security Architect perspectives only
+2. Run Backend Engineer + Security Architect + Simplicity/Architecture Reviewer perspectives only
 3. Report critical and major issues
 4. Skip minor issues and full iteration
 
@@ -49,7 +49,7 @@ Phase 2: Technical Clarification (if needed)
     ↓
 Phase 3: Construct Review Plan
     ↓
-Phase 4: Multi-Perspective Review (6 experts)
+Phase 4: Multi-Perspective Review (7 lenses)
     ↓
 Phase 5: Synthesize & Prioritize
     ↓
@@ -153,6 +153,19 @@ Execute by adopting each expert perspective. Each reviewer examines the ENTIRE s
 - Are testing requirements achievable?
 - Is documentation sufficient for onboarding?
 
+### 🔷 7. Simplicity / Architecture Reviewer
+
+**Focus:** Simplicity, repo fit, justified abstraction, maintainable boundaries
+
+**Review Questions:**
+- Is this the simplest valid design that satisfies the approved requirements?
+- Are any abstractions, layers, interfaces, services, or extension points unnecessary right now?
+- Is complexity justified by a concrete requirement or scale need?
+- Does the design fit the repository's existing architecture and conventions?
+- Are responsibilities clearly separated without over-fragmenting the solution?
+- Has the spec introduced speculative flexibility or premature optimization?
+- Would a simpler design reduce delivery and maintenance risk without losing required capability?
+
 ## Phase 5: Synthesize & Prioritize
 
 After all perspectives complete:
@@ -161,9 +174,19 @@ After all perspectives complete:
 2. **De-duplicate** — Merge similar issues from multiple reviewers
 3. **Resolve conflicts** — If reviewers disagree, determine right call
 4. **Prioritize by impact:**
-   - **Critical:** Blocks implementation or creates significant risk — MUST fix
-   - **Major:** Significant gap or flaw — SHOULD fix before approval
-   - **Minor:** Improvement opportunity — FIX if time permits
+    - **Critical:** Blocks implementation or creates significant risk — MUST fix
+    - **Major:** Significant gap or flaw — SHOULD fix before approval
+    - **Minor:** Improvement opportunity — FIX if time permits
+
+### Explicit Blocking Rule: Over-Engineering
+
+Treat unjustified complexity as a blocking issue.
+
+Escalate to **Major** or **Critical** when the spec introduces:
+- abstractions with no immediate requirement justification
+- extra services or layers that do not materially improve correctness or maintainability
+- premature extensibility for hypothetical future use cases
+- architecture that is inconsistent with the repo's existing patterns without strong rationale
 
 ## Phase 6: Iterative Resolution
 
@@ -180,7 +203,7 @@ After all perspectives complete:
    - [ ] Zero major issues
    - [ ] All `[TBD]` resolved or explicitly deferred
    - [ ] All `[ASSUMPTION]` validated or converted
-   - [ ] All six perspectives approve
+   - [ ] All seven perspectives approve
 
 ## Phase 7: Final Validation & Output
 
@@ -207,6 +230,8 @@ After all perspectives complete:
 - [ ] Tech choices appropriate for team
 - [ ] Timeline realistic
 - [ ] MVP clearly distinguished
+- [ ] Design is as simple as possible without sacrificing required behavior
+- [ ] Abstractions are justified by current requirements, not hypothetical future flexibility
 
 **Implementability:**
 - [ ] Unfamiliar senior engineer could build from this
@@ -231,3 +256,4 @@ After all perspectives complete:
 | **Be specific in fixes** | Don't just identify problems; specify solutions |
 | **Verify alignment** | Tech spec must trace to product requirements |
 | **Think like an implementer** | Would YOU build from this doc? |
+| **Reject unjustified complexity** | Simplicity and architecture fitness are blocking design concerns |

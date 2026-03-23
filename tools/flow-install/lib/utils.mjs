@@ -167,6 +167,7 @@ export const resolveHome = (p) => {
 
 export const GLOBAL_SKILLS_DIR = path.join(homeDir, ".agents", "skills");
 export const GLOBAL_SCRIPTS_DIR = path.join(homeDir, ".scripts");
+export const GLOBAL_COMMANDS_DIR = process.env.XDG_BIN_HOME?.trim() || path.join(homeDir, ".local", "bin");
 export const GLOBAL_CLAUDE_MARKETPLACE = path.join(homeDir, ".agents", "claude-marketplace");
 export const GLOBAL_CLAUDE_SETTINGS = path.join(homeDir, ".claude", "settings.json");
 export const GLOBAL_OPENCODE_CONFIG = path.join(homeDir, ".config", "opencode", "opencode.json");

@@ -1,0 +1,13 @@
+name: tmux-agent-launcher
+type: opencode
+version: 0.1.2
+install_scope: global
+owner: julian
+status: experimental
+blast_radius: medium
+description: "Launch Claude or OpenCode in a named tmux session from the command line or a skill wrapper."
+permissions: [execute]
+data_categories: [none]
+egress: [none]
+invoke: "/tmux-agent-launcher"
+location: tools/flow-install/skills/tmux-agent-launcher

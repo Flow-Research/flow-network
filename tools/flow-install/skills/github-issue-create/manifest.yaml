@@ -1,0 +1,12 @@
+name: github-issue-create
+type: opencode
+version: 0.1.0
+owner: julian
+status: experimental
+blast_radius: medium
+description: "Create GitHub issues with structured inputs and optional project-board placement."
+permissions: [write]
+data_categories: [pii]
+egress: [api.github.com, github.com]
+invoke: "/github-issue-create"
+location: tools/flow-install/skills/github-issue-create

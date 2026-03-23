@@ -1,0 +1,12 @@
+name: local-run
+type: opencode
+version: 0.1.0
+owner: julian
+status: experimental
+blast_radius: medium
+description: "Prepare accurate local run instructions and optional Docker assets for a repository."
+permissions: [write]
+data_categories: [credentials]
+egress: []
+invoke: "/local-run"
+location: tools/flow-install/skills/local-run

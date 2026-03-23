@@ -1,0 +1,12 @@
+name: spec-to-regression
+type: opencode
+version: 0.2.2
+owner: julian
+status: experimental
+blast_radius: medium
+description: "Generate structured browser and API regression scenarios from approved specs using the Flow delivery profile and regression artifact contract."
+permissions: [read-source, read-specs, write-regression-specs, write-coverage-matrix]
+data_categories: [none]
+egress: []
+invoke: /spec-to-regression
+location: tools/flow-install/skills/spec-to-regression

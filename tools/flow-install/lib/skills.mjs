@@ -17,11 +17,74 @@ import {
   parseFrontmatter,
   compareSemver,
   GLOBAL_SKILLS_DIR,
+  GLOBAL_COMMANDS_DIR,
   GLOBAL_CLAUDE_MARKETPLACE,
   GLOBAL_CLAUDE_SETTINGS,
   GLOBAL_OPENCODE_CONFIG,
   log,
 } from "./utils.mjs";
+
+const RESERVED_SCRIPT_NAMES = new Set([
+  "register-skills.mjs",
+  "validate-skills.mjs",
+  "register-claude-skills.mjs",
+  "verify-harness.mjs",
+  "sync-rules.mjs",
+  "skills-root.mjs",
+  "skills-root.config.json",
+  "parse-frontmatter.mjs",
+]);
+
+const installSkillExecutables = async (skillDir, { dryRun = false } = {}) => {
+  const scriptsDir = path.join(skillDir, "scripts");
+  if (!(await pathExists(scriptsDir))) return 0;
+
+  await ensureDir(GLOBAL_COMMANDS_DIR);
+  let installed = 0;
+  const entries = await fs.readdir(scriptsDir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    if (!entry.isFile()) continue;
+    if (entry.name.endsWith(".md")) continue;
+    if (path.extname(entry.name) !== "") continue;
+    if (RESERVED_SCRIPT_NAMES.has(entry.name)) {
+      log.warn(`Skipping command shim ${entry.name}; reserved by Flow lifecycle scripts`);
+      continue;
+    }
+
+    const sourcePath = path.join(scriptsDir, entry.name);
+    const targetPath = path.join(GLOBAL_COMMANDS_DIR, entry.name);
+
+    if (dryRun) {
+      log.dryRun(`Would link ${entry.name} -> ~/.local/bin/${entry.name}`);
+      installed++;
+      continue;
+    }
+
+    try {
+      const existingStats = await fs.lstat(targetPath);
+      if (existingStats.isSymbolicLink()) {
+        const existingTarget = await fs.readlink(targetPath);
+        const resolvedExisting = path.resolve(path.dirname(targetPath), existingTarget);
+        if (resolvedExisting === sourcePath) {
+          installed++;
+          continue;
+        }
+      }
+      log.warn(`Skipping command shim ${entry.name}; ~/.local/bin/${entry.name} already exists`);
+      continue;
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
+
+    await fs.chmod(sourcePath, 0o755).catch(() => {});
+    await fs.symlink(sourcePath, targetPath);
+    log.ok(`command shim installed -> ~/.local/bin/${entry.name}`);
+    installed++;
+  }
+
+  return installed;
+};
 
 // ---------------------------------------------------------------------------
 // Collect skills from the flow-install skills/ source directory
@@ -72,6 +135,7 @@ export const installSkills = async (flowInstallRoot, { dryRun = false } = {}) =>
   let installed = 0;
   let skipped = 0;
   let upgraded = 0;
+  let commandShims = 0;
 
   for (const skill of sourceSkills) {
     const targetDir = path.join(GLOBAL_SKILLS_DIR, skill.name);
@@ -86,6 +150,7 @@ export const installSkills = async (flowInstallRoot, { dryRun = false } = {}) =>
       if (cmp <= 0) {
         log.skip(`${skill.name} (${existing.version || "unknown"} >= ${skill.version})`);
         skipped++;
+        commandShims += await installSkillExecutables(targetDir, { dryRun });
         continue;
       }
 
@@ -100,6 +165,7 @@ export const installSkills = async (flowInstallRoot, { dryRun = false } = {}) =>
       await copyDir(skill.sourceDir, targetDir);
       log.ok(`${skill.name} upgraded: ${existing.version} -> ${skill.version}`);
       upgraded++;
+      commandShims += await installSkillExecutables(targetDir, { dryRun });
     } else {
       // Fresh install
       if (dryRun) {
@@ -111,10 +177,11 @@ export const installSkills = async (flowInstallRoot, { dryRun = false } = {}) =>
       await copyDir(skill.sourceDir, targetDir);
       log.ok(`${skill.name} v${skill.version} installed`);
       installed++;
+      commandShims += await installSkillExecutables(targetDir, { dryRun });
     }
   }
 
-  return { installed, skipped, upgraded, total: sourceSkills.length };
+  return { installed, skipped, upgraded, commandShims, total: sourceSkills.length };
 };
 
 // ---------------------------------------------------------------------------

@@ -1,0 +1,12 @@
+name: ci-logs
+type: opencode
+version: 0.1.0
+owner: julian
+status: experimental
+blast_radius: low
+description: "Download and parse GitHub Actions logs to identify failures."
+permissions: [read:actions]
+data_categories: [none]
+egress: [api.github.com, github.com]
+invoke: "/ci-logs"
+location: tools/flow-install/skills/ci-logs

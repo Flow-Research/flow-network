@@ -27,6 +27,24 @@ need_command() {
   command -v "$1" >/dev/null 2>&1
 }
 
+path_has_entry() {
+  local needle="$1"
+  local entry
+  IFS=':' read -r -a path_entries <<<"${PATH:-}"
+  for entry in "${path_entries[@]}"; do
+    [[ "$entry" == "$needle" ]] && return 0
+  done
+  return 1
+}
+
+local_commands_dir() {
+  if [[ -n "${XDG_BIN_HOME:-}" ]]; then
+    printf '%s' "$XDG_BIN_HOME"
+  else
+    printf '%s' "$HOME/.local/bin"
+  fi
+}
+
 usage() {
   cat <<'EOF'
 Flow installer
@@ -244,7 +262,11 @@ print_summary() {
   log "- Install target: $installed_root"
   log "- Jarvis: $(command -v jarvis || printf 'not found')"
   log "- Shared skills: $HOME/.agents/skills"
+  log "- Terminal command shims: $(local_commands_dir)"
   log "- Lifecycle scripts: $HOME/.scripts"
+  if ! path_has_entry "$(local_commands_dir)"; then
+    log "- PATH warning: add '$(local_commands_dir)' to your shell PATH for Flow-installed commands"
+  fi
   log ""
   log "Next steps:"
   log "1. Review .jarvis/context/ and fill in project-specific context files"

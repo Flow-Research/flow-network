@@ -1,0 +1,81 @@
+{
+  "version": "1.0",
+  "project": "example-project",
+  "specRoot": ".jarvis/context/specs",
+  "regression": {
+    "browserSpec": "qa/browser/scripts/full-regression.md",
+    "apiSpec": "qa/api/scripts/api-regression.md",
+    "coverageMatrix": "qa/coverage-matrix.md"
+  },
+  "roles": {
+    "all": ["admin", "super_admin", "founder", "coach"],
+    "browserFixtures": {
+      "unauthenticated": {
+        "fixture": "page",
+        "extraFixtures": ["db"]
+      },
+      "admin": {
+        "fixture": "adminPage",
+        "extraFixtures": ["db"]
+      }
+    }
+  },
+  "browser": {
+    "inspectionDir": "tests/browser-integration/.dom-inspection",
+    "suitesDir": "tests/browser-integration/suites",
+    "suiteNames": {
+      "01": "Public Auth & Access"
+    },
+    "supportImports": {
+      "testFixtureModule": "../fixtures/auth-db.fixture",
+      "snapshotModule": "../helpers/snapshot",
+      "dbAssertionsModule": "../helpers/db-assertions"
+    },
+    "dbHelperRules": [
+      {
+        "match": ["user", "email"],
+        "helpers": ["getUserByEmail"]
+      }
+    ]
+  },
+  "api": {
+    "suitesDir": "tests/integration/api-routes",
+    "suiteMeta": {
+      "A": {
+        "name": "Domain Workflow",
+        "file": "domain-workflow.api.test.ts",
+        "description": "Primary domain workflow API coverage"
+      }
+    },
+    "supportImports": {
+      "apiUtilsModule": "../helpers/api-test-utils",
+      "testDatabaseModule": "../helpers/test-database",
+      "fixturesModule": "../fixtures/persona-fixtures"
+    },
+    "apiUtilImports": ["setupApiMocks", "setAuthUser", "clearAuth"],
+    "rlsApiUtilImports": ["setupApiMocks", "clearAuth"],
+    "testDatabaseImports": ["setupTestDatabase", "teardownTestDatabase", "cleanTestData"],
+    "defaultFixtureImports": ["FIXTURE_IDS"],
+    "fixtureSeedRules": [
+      {
+        "match": "seedProfileTypes",
+        "imports": ["seedProfileTypes"]
+      }
+    ]
+  },
+  "validators": {
+    "api": {
+      "backendGuardFunction": "isSupportedBackend",
+      "requiresClearAuth": true
+    },
+    "browser": {
+      "requireGuardReadOnly": true,
+      "disallowedPatterns": ["data-testid"]
+    }
+  },
+  "workflow": {
+    "integrationBranch": "dev",
+    "protectedBranches": ["main", "dev"],
+    "verificationCommand": "pnpm skills:validate && pnpm skills:register && pnpm harness:verify"
+  }
+}

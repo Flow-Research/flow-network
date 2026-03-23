@@ -1,0 +1,12 @@
+name: ci-fix
+type: opencode
+version: 0.1.0
+owner: julian
+status: experimental
+blast_radius: high
+description: "Iteratively diagnose and fix failing GitHub Actions runs until CI passes or safely escalates."
+permissions: [read, write, execute]
+data_categories: [none]
+egress: [api.github.com, github.com]
+invoke: "/ci-fix"
+location: tools/flow-install/skills/ci-fix

@@ -20,9 +20,33 @@ Guide the user through the complete product development pipeline:
 8. **QA** - Quality assurance with fix loop (artifacts stored within epic)
 9. **Local Run** - Docker configuration and deployment
 
+## Spec Root Resolution
+
+Resolve the spec root in this order:
+
+1. `BUILD_E2E_SPEC_ROOT` if set
+2. `./.jarvis/context/specs` if it exists
+3. `./specs` if it exists
+4. fallback default: `./specs`
+
+Use `${AGENTS_SKILLS_ROOT}/build-e2e/scripts/resolve-spec-root.sh` for shell resolution.
+
+Treat every `specs/<epic>/...` reference below as `${SPEC_ROOT}/<epic>/...`.
+
+## Integration Branch Resolution
+
+Use the repository integration branch from `.flow/delivery-profile.json` when present.
+
+Fallback order:
+
+1. `.flow/delivery-profile.json` → `workflow.integrationBranch`
+2. `dev`
+
+Treat every hardcoded `dev` reference below as the resolved integration branch.
+
 ## Epic Structure
 
-Epics are folders within `specs/` using the naming convention: `<NN>_<epic_name>`
+Epics are folders within the active spec root using the naming convention: `<NN>_<epic_name>`
 
 **Numbering rule (monotonic):**
 - Always use the **next highest** numeric prefix (max existing + 1)
@@ -56,8 +80,8 @@ Each epic gets its own git branch for clean isolation and history:
 
 ```
 main (production)
-└── dev (developer integration branch)
-    ├── epic/01_core_features          ← Completed, merged to dev
+└── <integration-branch> (developer integration branch)
+    ├── epic/01_core_features          ← Completed, merged to integration branch
     ├── epic/02_user_auth              ← In progress
     │   ├── feature/WORK-010-login     ← Work items branch from epic
     │   └── feature/WORK-011-signup
@@ -69,10 +93,10 @@ main (production)
 
 | Phase | Git Action |
 |-------|------------|
-| Epic selected | Create `epic/<epic_name>` from `dev` |
+| Epic selected | Create `epic/<epic_name>` from the integration branch |
 | Work item started | Create `feature/<work-id>` from epic branch |
 | Work item complete | Merge feature to epic branch, delete feature |
-| Epic complete | Squash-merge epic to `dev`, delete epic branch |
+| Epic complete | Squash-merge epic to the integration branch, delete epic branch |
 
 ### Benefits
 
@@ -89,15 +113,16 @@ $ARGUMENTS
 
 - Current directory: !`pwd`
 - Git status: !`git status 2>/dev/null | head -5 || echo "Not a git repo"`
-- Specs folder: !`ls specs/ 2>/dev/null || echo "No specs folder"`
-- Existing epics: !`ls -d specs/[0-9][0-9]_*/ 2>/dev/null | sed 's|specs/||g' | sed 's|/$||g' || echo "No epics found"`
-- Epic states: !`for f in specs/[0-9][0-9]_*/.build-e2e-state.json; do [ -f "$f" ] && echo "$f: $(cat "$f" | jq -r '.phase // "unknown"')"; done 2>/dev/null || echo "No epic states"`
+- Spec root: !`bash "${HOME}/.agents/skills/build-e2e/scripts/resolve-spec-root.sh" 2>/dev/null || printf '%s\n' specs`
+- Specs folder: !`SPEC_ROOT=$(bash "${HOME}/.agents/skills/build-e2e/scripts/resolve-spec-root.sh" 2>/dev/null || printf '%s\n' specs); ls "$SPEC_ROOT" 2>/dev/null || echo "No specs folder"`
+- Existing epics: !`SPEC_ROOT=$(bash "${HOME}/.agents/skills/build-e2e/scripts/resolve-spec-root.sh" 2>/dev/null || printf '%s\n' specs); ls -d "$SPEC_ROOT"/[0-9][0-9]_*/ 2>/dev/null | sed "s|$SPEC_ROOT/||g" | sed 's|/$||g' || echo "No epics found"`
+- Epic states: !`SPEC_ROOT=$(bash "${HOME}/.agents/skills/build-e2e/scripts/resolve-spec-root.sh" 2>/dev/null || printf '%s\n' specs); for f in "$SPEC_ROOT"/[0-9][0-9]_*/.build-e2e-state.json; do [ -f "$f" ] && echo "$f: $(cat "$f" | jq -r '.phase // "unknown"')"; done 2>/dev/null || echo "No epic states"`
 
 ## State File Location
 
 **Each epic has its own state file:**
 ```
-specs/<00>_<epic_name>/.build-e2e-state.json
+<SPEC_ROOT>/<00>_<epic_name>/.build-e2e-state.json
 ```
 
 This allows multiple epics to be worked on independently with their own lifecycle tracking.
@@ -111,16 +136,18 @@ This allows multiple epics to be worked on independently with their own lifecycl
 
 ### `continue` → Resume from checkpoint
 
-1. Detect active epic (most recently modified `specs/<epic>/.build-e2e-state.json`)
-2. Read current state from `specs/<epic>/.build-e2e-state.json`
+1. Detect active epic (most recently modified `${SPEC_ROOT}/<epic>/.build-e2e-state.json`)
+2. Read current state from `${SPEC_ROOT}/<epic>/.build-e2e-state.json`
 3. **Checkout the epic's git branch** (if not already on it)
 4. Identify current phase
 5. Resume execution from that point
 
 **Git branch handling on resume:**
 ```bash
+SPEC_ROOT=$(bash "${HOME}/.agents/skills/build-e2e/scripts/resolve-spec-root.sh")
+
 # Get epic branch from state
-EPIC_BRANCH=$(cat specs/<epic>/.build-e2e-state.json | jq -r '.git.epic_branch // empty')
+EPIC_BRANCH=$(cat "$SPEC_ROOT"/<epic>/.build-e2e-state.json | jq -r '.git.epic_branch // empty')
 
 # Checkout epic branch if defined and not already on it
 if [ -n "$EPIC_BRANCH" ]; then
@@ -179,7 +206,7 @@ This is useful when:
 │  └──────┬───────┘                                                   │
 │         ▼                                                           │
 │  ┌──────────────┐                                                   │
-│  │ EPIC SELECT  │  Create/select epic: specs/<00>_<epic_name>/      │
+│  │ EPIC SELECT  │  Create/select epic: <SPEC_ROOT>/<00>_<epic_name>/ │
 │  └──────┬───────┘                                                   │
 │         ▼                                                           │
 │  ┌──────────────┐                                                   │
@@ -286,7 +313,7 @@ Would you like to initialize semantic versioning? [Y/N]
 ```markdown
 Where would you like to create the specs folder?
 
-Default: ./specs
+Default: resolved spec root
 
 Enter path or press Enter for default:
 ```
@@ -363,8 +390,8 @@ mkdir -p specs/[00]_[epic_name]/qa/reports
 
 **Create or checkout epic branch:**
 ```bash
-# Ensure we're on dev first
-git checkout dev
+# Ensure we're on the integration branch first
+git checkout <integration-branch>
 
 # Create epic branch if it doesn't exist, or checkout existing
 git checkout -b epic/[00]_[epic_name] 2>/dev/null || git checkout epic/[00]_[epic_name]
@@ -382,7 +409,7 @@ git branch --show-current  # Should show: epic/[00]_[epic_name]
 **IMPORTANT: The brainstorm skill is INTERACTIVE. You MUST engage in a back-and-forth conversation with the user. Do NOT auto-generate brainstorm.md without user participation.**
 
 **Evidence Requirement (Non-negotiable):**
-- Maintain a transcript file at `specs/<epic>/brainstorm_transcript.md`
+- Maintain a transcript file at `${SPEC_ROOT}/<epic>/brainstorm_transcript.md`
 - Log **at least 3** Q/A exchanges (one question at a time)
 - Include a final “clarity check” question and the user’s confirmation
 - Only then generate `brainstorm.md`
@@ -464,7 +491,7 @@ question(questions=[{
 
 **Validation (required before proceeding):**
 ```bash
-${AGENTS_SKILLS_ROOT}/build-e2e/scripts/validate.sh specs/<epic>
+${AGENTS_SKILLS_ROOT}/build-e2e/scripts/validate.sh <epic-path-or-epic-name>
 ```
 
 Validation is a hard gate. If brainstorm evidence is missing or non-interactive (fewer than 3 Q/A pairs, missing clarity check/answer), the run must stop and return to brainstorm.
@@ -536,7 +563,7 @@ question(questions=[{
 
 **Validation (required before proceeding):**
 ```bash
-${AGENTS_SKILLS_ROOT}/build-e2e/scripts/validate.sh specs/<epic>
+${AGENTS_SKILLS_ROOT}/build-e2e/scripts/validate.sh <epic-path-or-epic-name>
 ```
 
 Validation is a hard gate. If PRD panel review evidence is missing (`prd_review_summary.md` with all-perspectives sign-off), the run must stop and return to PRD review.
@@ -616,7 +643,7 @@ question(questions=[{
 
 **Validation (required before proceeding):**
 ```bash
-${AGENTS_SKILLS_ROOT}/build-e2e/scripts/validate.sh specs/<epic>
+${AGENTS_SKILLS_ROOT}/build-e2e/scripts/validate.sh <epic-path-or-epic-name>
 ```
 
 Validation is a hard gate. If tech-spec panel review evidence is missing (`techspec_review_summary.md` with all-perspectives sign-off), the run must stop and return to tech-spec review.
@@ -925,7 +952,7 @@ After local run verification, offer to complete the epic branch:
 
 All work items and QA complete. Ready to finalize the epic branch?
 
-**Option A:** Squash-merge epic to dev (recommended)
+**Option A:** Squash-merge epic to the integration branch (recommended)
 **Option B:** Keep epic branch open for further work
 **Option C:** View epic branch summary first
 
@@ -938,8 +965,8 @@ Choose [A/B/C]:
 git checkout epic/[00]_[epic_name]
 git status  # Verify clean working tree
 
-# Switch to dev and squash-merge
-git checkout dev
+# Switch to the integration branch and squash-merge
+git checkout <integration-branch>
 git merge --squash epic/[00]_[epic_name]
 
 # Create a comprehensive commit message
@@ -1040,7 +1067,7 @@ Congratulations! Your product is now running locally.
 
 ## State Management
 
-Track progress in `specs/<epic>/.build-e2e-state.json` (within the epic folder):
+Track progress in `${SPEC_ROOT}/<epic>/.build-e2e-state.json` (within the epic folder):
 
 ```json
 {
@@ -1052,7 +1079,7 @@ Track progress in `specs/<epic>/.build-e2e-state.json` (within the epic folder):
   "git_initialized": true,
   "semver_initialized": true,
   "git": {
-    "base_branch": "dev",
+    "base_branch": "<integration-branch>",
     "epic_branch": "epic/05_ui_search_publishing",
     "epic_merged": false,
     "merge_commit": null,
@@ -1115,7 +1142,7 @@ Track progress in `specs/<epic>/.build-e2e-state.json` (within the epic folder):
 - `qa.output_folder`: QA artifacts go to `<epic>/qa/`
 
 **Git branching fields:**
-- `git.base_branch`: The branch to merge back to (usually `dev`)
+- `git.base_branch`: The branch to merge back to (usually the configured integration branch)
 - `git.epic_branch`: The epic's dedicated branch (e.g., `epic/05_ui_search_publishing`)
 - `git.epic_merged`: Whether the epic branch has been squash-merged
 - `git.merge_commit`: The commit hash of the squash-merge (after completion)
@@ -1212,7 +1239,7 @@ When resuming a session with `continue`, perform a **project state investigation
 
 2. **Spec File Existence**
    ```bash
-   ls specs/<epic>/*.md
+   ls <SPEC_ROOT>/<epic>/*.md
    ```
    - Does the state show files as created that don't exist?
    - Are there files that exist but aren't tracked in state?
@@ -1224,7 +1251,7 @@ When resuming a session with `continue`, perform a **project state investigation
 
 4. **QA Artifacts**
    ```bash
-   ls specs/<epic>/qa/{bugs,test-cases,reports}
+   ls <SPEC_ROOT>/<epic>/qa/{bugs,test-cases,reports}
    ```
    - Do QA folders exist if state shows QA complete?
    - Do bug reports exist if bugs are tracked?
@@ -1258,7 +1285,7 @@ When resuming a session with `continue`, perform a **project state investigation
 ## Project State Investigation
 
 ### State File
-- **Path:** specs/<epic>/.build-e2e-state.json
+- **Path:** <SPEC_ROOT>/<epic>/.build-e2e-state.json
 - **Last Modified:** [timestamp]
 - **Current Phase:** [phase]
 

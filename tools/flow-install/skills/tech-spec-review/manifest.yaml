@@ -1,10 +1,10 @@
 name: tech-spec-review
 type: opencode
-version: 0.1.0
+version: 0.2.0
 owner: julian
 status: experimental
 blast_radius: medium
-description: "Six-perspective engineering review for technical_spec.md files."
+description: "Seven-lens engineering review for technical_spec.md files, including an explicit simplicity and architectural fitness gate."
 permissions: [write]
 data_categories: [pii]
 egress: []

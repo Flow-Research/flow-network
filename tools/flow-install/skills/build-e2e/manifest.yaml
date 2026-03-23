@@ -1,10 +1,10 @@
 name: build-e2e
 type: opencode
-version: 0.1.0
+version: 0.2.2
 owner: julian
 status: experimental
 blast_radius: high
-description: "End-to-end product development orchestrator with human-in-the-loop reviews."
+description: "End-to-end product development orchestrator with human-in-the-loop reviews and spec-root resolution across Flow-compatible repositories."
 permissions: [write]
 data_categories: [pii]
 egress: []

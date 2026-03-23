@@ -122,6 +122,7 @@ const main = async () => {
     const result = await installSkills(__dirname, { dryRun });
     if (!dryRun) {
       log.info(`Skills: ${result.installed} installed, ${result.upgraded} upgraded, ${result.skipped} current`);
+      log.info(`Command shims: ${result.commandShims} linked into user-local bin`);
     }
   }
 

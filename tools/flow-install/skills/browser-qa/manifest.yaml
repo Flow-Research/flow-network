@@ -1,0 +1,12 @@
+name: browser-qa
+type: opencode
+version: 0.2.2
+owner: julian
+status: experimental
+blast_radius: high
+description: "Playwright-based browser QA skill for guided setup, auth handoff, scripted runs, and artifact capture across Flow-compatible repositories."
+permissions: [read, write, execute]
+data_categories: [credentials, pii]
+egress: []
+invoke: "/browser-qa"
+location: tools/flow-install/skills/browser-qa

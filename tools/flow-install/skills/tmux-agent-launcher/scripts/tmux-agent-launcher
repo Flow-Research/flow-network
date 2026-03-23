@@ -1,0 +1,208 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_NAME=$(basename "$0")
+
+usage() {
+  cat <<'EOF'
+Usage:
+  tmux-agent-launcher --runner <claude|opencode> <session-name> [options]
+  tmux-agent-launcher attach <session-name> [--dry-run] [--json]
+  tmux-agent-launcher list [--json]
+
+Launch Claude or OpenCode in a named tmux session, attach to an existing session, or list sessions.
+
+Options:
+  --runner <name>   Runner to launch: claude or opencode
+  --cwd <path>      Working directory for the tmux session (default: current directory)
+  --attach          Attach to the session after creating it
+  --dry-run         Print the launch plan without creating a tmux session
+  --json            Emit machine-readable JSON
+  --help            Show this help text
+EOF
+}
+
+json_escape() {
+  python3 -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$1"
+}
+
+fail() {
+  local code="$1"
+  local message="$2"
+  if [[ "$JSON_MODE" == "1" ]]; then
+    printf '{"ok":false,"error":{"code":%s,"message":%s}}\n' "$code" "$(json_escape "$message")"
+  else
+    printf '%s: %s\n' "$SCRIPT_NAME" "$message" >&2
+  fi
+  exit "$code"
+}
+
+require_command() {
+  local command_name="$1"
+  command -v "$command_name" >/dev/null 2>&1 || fail 3 "Missing required command: $command_name"
+}
+
+RUNNER=""
+CWD=$(pwd)
+ATTACH=0
+DRY_RUN=0
+JSON_MODE=0
+SESSION_NAME=""
+MODE="launch"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    list)
+      [[ -z "$SESSION_NAME" && "$RUNNER" == "" ]] || fail 2 "list must be the first argument"
+      MODE="list"
+      shift
+      ;;
+    attach)
+      [[ -z "$SESSION_NAME" && "$RUNNER" == "" ]] || fail 2 "attach must be the first argument"
+      MODE="attach"
+      shift
+      ;;
+    --runner)
+      [[ $# -ge 2 ]] || fail 2 "--runner requires a value"
+      RUNNER="$2"
+      shift 2
+      ;;
+    --cwd)
+      [[ $# -ge 2 ]] || fail 2 "--cwd requires a value"
+      CWD="$2"
+      shift 2
+      ;;
+    --attach)
+      ATTACH=1
+      shift
+      ;;
+    --dry-run)
+      DRY_RUN=1
+      shift
+      ;;
+    --json)
+      JSON_MODE=1
+      shift
+      ;;
+    --help)
+      usage
+      exit 0
+      ;;
+    --*)
+      fail 2 "Unknown option: $1"
+      ;;
+    *)
+      if [[ -z "$SESSION_NAME" ]]; then
+        SESSION_NAME="$1"
+        shift
+      else
+        fail 2 "Unexpected argument: $1"
+      fi
+      ;;
+  esac
+done
+
+if [[ "$MODE" == "list" ]]; then
+  require_command tmux
+  SESSION_LINES=$(tmux list-sessions -F '#{session_name}' 2>/dev/null || true)
+  if [[ "$JSON_MODE" == "1" ]]; then
+    SESSION_JSON=$(python3 - <<'PY' "$SESSION_LINES"
+import json
+import sys
+raw = sys.argv[1]
+sessions = [line for line in raw.splitlines() if line]
+print(json.dumps(sessions))
+PY
+)
+    printf '{"ok":true,"action":"list","sessions":%s}\n' "$SESSION_JSON"
+  else
+    if [[ -n "$SESSION_LINES" ]]; then
+      printf '%s\n' "$SESSION_LINES"
+    else
+      printf 'No tmux sessions found\n'
+    fi
+  fi
+  exit 0
+fi
+
+[[ -n "$SESSION_NAME" ]] || fail 2 "session name is required"
+
+if [[ "$MODE" == "attach" ]]; then
+  require_command tmux
+
+  if [[ "$DRY_RUN" == "0" ]]; then
+    tmux has-session -t "$SESSION_NAME" >/dev/null 2>&1 || fail 4 "tmux session does not exist: $SESSION_NAME"
+    exec tmux attach-session -t "$SESSION_NAME"
+  fi
+
+  if [[ "$JSON_MODE" == "1" ]]; then
+    printf '{"ok":true,"action":"attach","session":%s,"dry_run":true,"command":["tmux","attach-session","-t",%s]}\n' \
+      "$(json_escape "$SESSION_NAME")" \
+      "$(json_escape "$SESSION_NAME")"
+  else
+    printf 'Dry run: would attach to tmux session %s\n' "$SESSION_NAME"
+  fi
+  exit 0
+fi
+
+[[ -n "$RUNNER" ]] || fail 2 "--runner is required"
+
+case "$RUNNER" in
+  claude)
+    RUNNER_COMMAND=${TMUX_AGENT_LAUNCHER_CLAUDE_CMD:-claude}
+    ;;
+  opencode)
+    RUNNER_COMMAND=${TMUX_AGENT_LAUNCHER_OPENCODE_CMD:-opencode}
+    ;;
+  *)
+    fail 2 "Unsupported runner: $RUNNER"
+    ;;
+esac
+
+require_command python3
+
+if [[ ! -d "$CWD" ]]; then
+  fail 2 "Working directory does not exist: $CWD"
+fi
+
+ABS_CWD=$(python3 -c 'import os,sys; print(os.path.abspath(sys.argv[1]))' "$CWD")
+
+TMUX_COMMAND=(tmux new-session -d -s "$SESSION_NAME" -c "$ABS_CWD" bash -lc "$RUNNER_COMMAND")
+
+if [[ "$JSON_MODE" == "1" ]]; then
+  COMMAND_JSON=$(python3 - <<'PY' "$SESSION_NAME" "$ABS_CWD" "$RUNNER_COMMAND"
+import json
+import sys
+session, cwd, runner_command = sys.argv[1:4]
+print(json.dumps(["tmux", "new-session", "-d", "-s", session, "-c", cwd, "bash", "-lc", runner_command]))
+PY
+)
+fi
+
+if [[ "$DRY_RUN" == "0" ]]; then
+  require_command tmux
+  command -v "$RUNNER_COMMAND" >/dev/null 2>&1 || fail 3 "Missing runner command: $RUNNER_COMMAND"
+  if tmux has-session -t "$SESSION_NAME" >/dev/null 2>&1; then
+    fail 4 "tmux session already exists: $SESSION_NAME"
+  fi
+  "${TMUX_COMMAND[@]}"
+  if [[ "$ATTACH" == "1" ]]; then
+    exec tmux attach-session -t "$SESSION_NAME"
+  fi
+fi
+
+if [[ "$JSON_MODE" == "1" ]]; then
+  printf '{"ok":true,"action":"launch","runner":%s,"session":%s,"cwd":%s,"attach":%s,"dry_run":%s,"command":%s}\n' \
+    "$(json_escape "$RUNNER")" \
+    "$(json_escape "$SESSION_NAME")" \
+    "$(json_escape "$ABS_CWD")" \
+    "$([[ "$ATTACH" == "1" ]] && printf 'true' || printf 'false')" \
+    "$([[ "$DRY_RUN" == "1" ]] && printf 'true' || printf 'false')" \
+    "$COMMAND_JSON"
+else
+  if [[ "$DRY_RUN" == "1" ]]; then
+    printf 'Dry run: would launch %s in tmux session %s at %s\n' "$RUNNER" "$SESSION_NAME" "$ABS_CWD"
+  else
+    printf 'Launched %s in tmux session %s at %s\n' "$RUNNER" "$SESSION_NAME" "$ABS_CWD"
+  fi
+fi

@@ -1,6 +1,6 @@
 ---
 name: tech-spec-review
-description: "Six-perspective engineering review for technical_spec.md files."
+description: "Seven-lens engineering review for technical_spec.md files, including an explicit simplicity and architectural fitness gate."
 disable-model-invocation: true
 allowed-tools: Read, Write, ApplyPatch, Grep, Glob, WebSearch
 argument-hint: "[quick] or path to technical_spec.md"
@@ -9,7 +9,7 @@ argument-hint: "[quick] or path to technical_spec.md"
 # Tech Spec Review
 
 ## Purpose
-Review and refine technical specifications using multi-perspective engineering analysis.
+Review and refine technical specifications using multi-perspective engineering analysis, including explicit design-time simplicity and architecture scrutiny.
 
 ## Inputs
 - Optional argument: `quick` for abbreviated review

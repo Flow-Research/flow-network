@@ -5,8 +5,14 @@ Validate build-e2e artifacts and state before proceeding to the next checkpoint.
 ## Usage
 
 ```bash
-${AGENTS_SKILLS_ROOT}/build-e2e/scripts/validate.sh specs/<epic>
+${AGENTS_SKILLS_ROOT}/build-e2e/scripts/validate.sh <epic-path-or-epic-name>
 ```
+
+Spec root resolution order:
+
+1. `BUILD_E2E_SPEC_ROOT`
+2. `.jarvis/context/specs`
+3. `specs`
 
 ## What it checks
 

@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "timestamp": "2026-03-20T22:29:16.875Z",
+  "timestamp": "2026-03-23T08:43:22.276Z",
   "project": "flow-network",
   "monorepo": null,
   "apps": [],
@@ -15,14 +15,25 @@
     "agentsMd": true
   },
   "flowCoreSkills": [
+    "api-integration-codegen",
     "brainstorm",
+    "browser-integration-codegen",
+    "browser-qa",
     "build-e2e",
+    "ci-fix",
+    "ci-logs",
+    "ci-rerun",
+    "ci-watch",
     "code-review",
     "community-skills-install",
+    "context-sync",
     "cto",
     "engineer",
     "git-commit",
+    "github-issue-create",
+    "issue-flow",
     "jarvis",
+    "local-run",
     "mvp-tech-spec",
     "prd",
     "prd-spec-review",
@@ -31,8 +42,11 @@
     "skill-create",
     "skill-publish",
     "skill-validate",
+    "spec-to-regression",
     "tech-spec",
-    "tech-spec-review"
+    "tech-spec-review",
+    "test-quality-validator",
+    "tmux-agent-launcher"
   ],
   "communitySkills": {
     "mode": "full",
@@ -1301,7 +1315,7 @@
   "contextAgents": {
     "version": "1.0.0",
     "templateHash": "99325332f3db48f26d643d382823a1b1342f8b23e53c97f6a53bd2e07eff2739",
-    "status": "created",
+    "status": "update_available",
     "path": ".jarvis/context/AGENTS.md"
   },
   "installPaths": {

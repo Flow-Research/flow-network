@@ -171,11 +171,11 @@ updated: 2026-03-16
 ---
 name: tech-spec-review
 type: opencode
-version: 0.1.0
+version: 0.2.2
 status: experimental
 owner: julian
 blast_radius: medium
-description: "Six-perspective engineering review for technical_spec.md files."
+description: "Seven-lens engineering review for technical_spec.md files, including an explicit simplicity and architectural fitness gate."
 location: tools/flow-install/skills/tech-spec-review
 invoke: "/tech-spec-review"
 permissions: [write]
@@ -271,11 +271,11 @@ updated: 2026-03-16
 ---
 name: build-e2e
 type: opencode
-version: 0.1.0
+version: 0.2.2
 status: experimental
 owner: julian
 blast_radius: high
-description: "End-to-end product development orchestrator with human-in-the-loop reviews."
+description: "End-to-end product development orchestrator with human-in-the-loop reviews and spec-root resolution across Flow-compatible repositories."
 location: tools/flow-install/skills/build-e2e
 invoke: "/build-e2e"
 permissions: [write]
@@ -386,6 +386,287 @@ tags: [productivity, assistant]
 depends_on: []
 created: 2026-03-16
 updated: 2026-03-16
+---
+
+---
+name: tmux-agent-launcher
+type: opencode
+version: 0.1.0
+install_scope: global
+status: experimental
+owner: julian
+blast_radius: medium
+description: "Launch Claude or OpenCode in a named tmux session from the command line or a skill wrapper."
+location: tools/flow-install/skills/tmux-agent-launcher
+invoke: "/tmux-agent-launcher"
+permissions: [execute]
+data_categories: [none]
+egress: [none]
+phase: P1
+tags: [tmux, automation, agents]
+depends_on: []
+created: 2026-03-22
+updated: 2026-03-22
+---
+
+---
+name: browser-qa
+type: opencode
+version: 0.2.2
+status: experimental
+owner: julian
+blast_radius: high
+description: "Playwright-based browser QA skill for guided setup, auth handoff, scripted runs, and artifact capture across Flow-compatible repositories."
+location: tools/flow-install/skills/browser-qa
+invoke: "/browser-qa"
+permissions: [read, write, execute]
+data_categories: [credentials, pii]
+egress: []
+phase: P5
+tags: [qa, browser, playwright]
+depends_on: [qa]
+created: 2026-03-23
+updated: 2026-03-23
+---
+
+---
+name: ci-logs
+type: opencode
+version: 0.1.0
+status: experimental
+owner: julian
+blast_radius: low
+description: "Download and parse GitHub Actions logs to identify failures."
+location: tools/flow-install/skills/ci-logs
+invoke: "/ci-logs"
+permissions: [read:actions]
+data_categories: [none]
+egress: [api.github.com, github.com]
+phase: P5
+tags: [ci, github, logs]
+depends_on: []
+created: 2026-03-23
+updated: 2026-03-23
+---
+
+---
+name: ci-rerun
+type: opencode
+version: 0.1.0
+status: experimental
+owner: julian
+blast_radius: low
+description: "Re-run GitHub Actions workflow runs (full or failed jobs only)."
+location: tools/flow-install/skills/ci-rerun
+invoke: "/ci-rerun"
+permissions: [write:actions]
+data_categories: [none]
+egress: [api.github.com, github.com]
+phase: P5
+tags: [ci, github, rerun]
+depends_on: [ci-watch]
+created: 2026-03-23
+updated: 2026-03-23
+---
+
+---
+name: ci-fix
+type: opencode
+version: 0.1.0
+status: experimental
+owner: julian
+blast_radius: high
+description: "Iteratively diagnose and fix failing GitHub Actions runs until CI passes or safely escalates."
+location: tools/flow-install/skills/ci-fix
+invoke: "/ci-fix"
+permissions: [read, write, execute]
+data_categories: [none]
+egress: [api.github.com, github.com]
+phase: P5
+tags: [ci, github, remediation]
+depends_on: [ci-logs, ci-watch]
+created: 2026-03-23
+updated: 2026-03-23
+---
+
+---
+name: ci-watch
+type: opencode
+version: 0.1.0
+status: experimental
+owner: julian
+blast_radius: low
+description: "Monitor GitHub Actions workflow runs and report status."
+location: tools/flow-install/skills/ci-watch
+invoke: "/ci-watch"
+permissions: [read:actions]
+data_categories: [none]
+egress: [api.github.com, github.com]
+phase: P5
+tags: [ci, github, monitoring]
+depends_on: []
+created: 2026-03-23
+updated: 2026-03-23
+---
+
+---
+name: github-issue-create
+type: opencode
+version: 0.1.0
+status: experimental
+owner: julian
+blast_radius: medium
+description: "Create GitHub issues with structured inputs and optional project-board placement."
+location: tools/flow-install/skills/github-issue-create
+invoke: "/github-issue-create"
+permissions: [write]
+data_categories: [pii]
+egress: [api.github.com, github.com]
+phase: P5
+tags: [github, issues, automation]
+depends_on: []
+created: 2026-03-23
+updated: 2026-03-23
+---
+
+---
+name: issue-flow
+type: opencode
+version: 0.2.0
+status: experimental
+owner: julian
+blast_radius: high
+description: "Drive one GitHub issue through clarification recovery, specs, implementation, regression generation, test generation, validation, QA, simplicity review, PR, and acceptance with enforced human review gates and quality gates."
+location: tools/flow-install/skills/issue-flow
+invoke: "/issue-flow"
+permissions: [read, write, execute]
+data_categories: [none]
+egress: [api.github.com, github.com]
+phase: P3
+tags: [issues, orchestration, delivery]
+depends_on: [build-e2e, spec-to-regression, api-integration-codegen, browser-integration-codegen, test-quality-validator, qa]
+created: 2026-03-23
+updated: 2026-03-23
+---
+
+---
+name: context-sync
+type: opencode
+version: 0.3.0
+status: beta
+owner: julian
+blast_radius: high
+description: "Safe repo pull/push workflow that targets the repository integration branch, uses deterministic planning, and keeps PRs moving with a bounded autonomous resolution loop."
+location: tools/flow-install/skills/context-sync
+invoke: "/context-sync"
+permissions: [read, write, execute]
+data_categories: [credentials]
+egress: [api.github.com, github.com]
+phase: P6
+tags: [git, sync, pr]
+depends_on: []
+created: 2026-03-23
+updated: 2026-03-23
+---
+
+---
+name: local-run
+type: opencode
+version: 0.1.0
+status: experimental
+owner: julian
+blast_radius: medium
+description: "Prepare accurate local run instructions and optional Docker assets for a repository."
+location: tools/flow-install/skills/local-run
+invoke: "/local-run"
+permissions: [write]
+data_categories: [credentials]
+egress: []
+phase: P5
+tags: [devops, docker, docs]
+depends_on: []
+created: 2026-03-23
+updated: 2026-03-23
+---
+
+---
+name: spec-to-regression
+type: opencode
+version: 0.2.2
+status: experimental
+owner: julian
+blast_radius: medium
+description: "Generate structured browser and API regression scenarios from approved specs using the Flow delivery profile and regression artifact contract."
+location: tools/flow-install/skills/spec-to-regression
+invoke: "/spec-to-regression"
+permissions: [read-source, read-specs, write-regression-specs, write-coverage-matrix]
+data_categories: [none]
+egress: []
+phase: P4
+tags: [testing, regression, spec]
+depends_on: [build-e2e, tech-spec-review]
+created: 2026-03-23
+updated: 2026-03-23
+---
+
+---
+name: api-integration-codegen
+type: opencode
+version: 0.2.2
+status: experimental
+owner: julian
+blast_radius: medium
+description: "Generate API integration test suites from Flow regression artifacts using profile-driven suite metadata, helper imports, and project adapters."
+location: tools/flow-install/skills/api-integration-codegen
+invoke: "/api-integration-codegen"
+permissions: [read-source, read-regression-spec, write-test-suites, execute-scripts]
+data_categories: [none]
+egress: []
+phase: P4
+tags: [testing, codegen, api]
+depends_on: [spec-to-regression]
+created: 2026-03-23
+updated: 2026-03-23
+---
+
+---
+name: browser-integration-codegen
+type: opencode
+version: 0.2.1
+status: experimental
+owner: julian
+blast_radius: medium
+description: "Generate browser integration test suites from Flow regression artifacts using profile-driven fixtures, imports, and selector verification."
+location: tools/flow-install/skills/browser-integration-codegen
+invoke: "/browser-integration-codegen"
+permissions: [read-source, read-regression-spec, read-dom-artifacts, write-test-suites, execute-scripts]
+data_categories: [none]
+egress: []
+phase: P4
+tags: [testing, codegen, browser]
+depends_on: [spec-to-regression, browser-qa]
+created: 2026-03-23
+updated: 2026-03-23
+---
+
+---
+name: test-quality-validator
+type: opencode
+version: 0.2.1
+status: experimental
+owner: julian
+blast_radius: low
+description: "Validate generated or maintained tests for coverage completeness, correctness, and false-green risks using Flow regression artifacts and delivery-profile rules."
+location: tools/flow-install/skills/test-quality-validator
+invoke: "/test-quality-validator"
+permissions: [read-source, read-specs, read-regression-specs, read-test-files, write-reports]
+data_categories: [none]
+egress: []
+phase: P5
+tags: [testing, validation, qa]
+depends_on: [spec-to-regression, api-integration-codegen, browser-integration-codegen]
+created: 2026-03-23
+updated: 2026-03-23
 ---
 
 ## Notes

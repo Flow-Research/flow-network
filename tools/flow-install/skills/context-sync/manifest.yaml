@@ -1,0 +1,12 @@
+name: context-sync
+type: opencode
+version: 0.3.0
+owner: julian
+status: beta
+blast_radius: high
+description: "Safe repo pull/push workflow that targets the repository integration branch, uses deterministic planning, and keeps PRs moving with a bounded autonomous resolution loop."
+permissions: [read, write, execute]
+data_categories: [credentials]
+egress: [github.com, api.github.com]
+invoke: "/context-sync"
+location: tools/flow-install/skills/context-sync

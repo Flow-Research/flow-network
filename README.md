@@ -14,6 +14,11 @@ It gives any repository a working AI operating layer with:
 - a shared context vault and knowledge base protocol
 - a minimal root `AGENTS.md` pointer plus full protocol in `.jarvis/context/AGENTS.md`
 
+Contribution workflow:
+
+- `CONTRIBUTING.md` - contributor routing and core rules
+- `.jarvis/context/docs/contribution-protocol.md` - full Git-native contribution and correctness protocol
+
 ## What You Get
 
 After installation, a project gets this baseline structure:

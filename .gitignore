@@ -61,3 +61,8 @@ __pycache__/
 
 # === Git / release scratch ===
 .gitmodules
+
+# === Non-canonical planning artifacts ===
+task_plan.md
+findings.md
+progress.md

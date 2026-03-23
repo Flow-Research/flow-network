@@ -1,6 +1,7 @@
 name: <skill-name>
 type: <opencode|OpenClaw|n8n>
 version: 0.1.0
+install_scope: <local-repo|global>
 owner: <owner>
 status: experimental
 blast_radius: <low|medium|high>
@@ -9,4 +10,4 @@ permissions: [<explicit, minimal list>]
 data_categories: [<pii|financial|credentials|none>]
 egress: [<allowed outbound destinations>]
 invoke: "/<skill-name>"
-location: plugins/<type>/<skill-name>
+location: <.agents/<type>/<skill-name>|tools/flow-install/<type>/<skill-name>>

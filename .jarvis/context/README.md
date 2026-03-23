@@ -49,6 +49,8 @@ For **meeting context**, browse:
 | `recurring.md` | Recurring tasks and session rituals | 2025-11 |
 | `delegation.md` | Team structure and delegation | 2025-11 |
 | `docs/flow-deep-system-analysis.md` | 625-line strategic analysis of full Flow ecosystem | 2026-03 |
+| `docs/contribution-protocol.md` | Git-native protocol for contributing Flow core, skills, knowledge, and memory | 2026-03 |
+| `docs/skill-promotion-maintainer-playbook.md` | Maintainer workflow for promoting local installed-repo skills into shared Flow skills | 2026-03 |
 | `docs/flow-v1-unit-economics-model-appendix.md` | V1 unit economics model | 2026-03 |
 | `docs/flow-poc-architecture.md` | Current POC architecture (Bittensor, orchestrator, agents) | 2026-03 |
 | `partnerships/accelerate-africa/` | Accelerate Africa proposal and deck docs | 2026-02 |

@@ -1,10 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-EPIC_PATH="${1:-}"
-if [ -z "$EPIC_PATH" ]; then
-  echo "Usage: $0 <specs/<epic>>" >&2
+TARGET="${1:-}"
+if [ -z "$TARGET" ]; then
+  echo "Usage: $0 <epic-path-or-epic-name>" >&2
   exit 1
+fi
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SPEC_ROOT="$("${SCRIPT_DIR}/resolve-spec-root.sh")"
+
+if [ -d "$TARGET" ] && [ -f "$TARGET/.build-e2e-state.json" ]; then
+  EPIC_PATH="$TARGET"
+else
+  EPIC_PATH="${SPEC_ROOT%/}/${TARGET}"
 fi
 
 STATE_FILE="${EPIC_PATH}/.build-e2e-state.json"

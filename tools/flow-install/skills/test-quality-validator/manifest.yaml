@@ -1,0 +1,12 @@
+name: test-quality-validator
+type: opencode
+version: 0.2.2
+owner: julian
+status: experimental
+blast_radius: low
+description: "Validate generated or maintained tests for coverage completeness, correctness, and false-green risks using Flow regression artifacts and delivery-profile rules."
+permissions: [read-source, read-specs, read-regression-specs, read-test-files, write-reports]
+data_categories: [none]
+egress: []
+invoke: /test-quality-validator
+location: tools/flow-install/skills/test-quality-validator

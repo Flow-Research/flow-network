@@ -1,0 +1,12 @@
+name: ci-rerun
+type: opencode
+version: 0.1.0
+owner: julian
+status: experimental
+blast_radius: low
+description: "Re-run GitHub Actions workflow runs (full or failed jobs only)."
+permissions: [write:actions]
+data_categories: [none]
+egress: [api.github.com, github.com]
+invoke: "/ci-rerun"
+location: tools/flow-install/skills/ci-rerun
