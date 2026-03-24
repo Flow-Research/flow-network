@@ -166,8 +166,8 @@ const main = async () => {
       dryRun,
       contextDirRel: installPaths.contextDir,
       installPaths,
-      forceUpdate: false,
-      promptOnUpdate: !yesAll,
+      forceUpdate: true,
+      promptOnUpdate: false,
     });
   } else if (updateContextAgents) {
     log.step(6, TOTAL_STEPS, "Updating .jarvis/context/AGENTS.md");

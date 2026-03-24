@@ -190,14 +190,22 @@ install_flow_framework() {
 
   if [[ "$INSTALL_MODE" == "in-place" ]]; then
     log "[info] Installing Flow framework into target repo: $TARGET_ROOT"
-    node "$FLOW_ROOT/tools/flow-install/index.mjs" "${flow_args[@]}" --target "$TARGET_ROOT"
+    if ((${#flow_args[@]})); then
+      node "$FLOW_ROOT/tools/flow-install/index.mjs" "${flow_args[@]}" --target "$TARGET_ROOT"
+    else
+      node "$FLOW_ROOT/tools/flow-install/index.mjs" --target "$TARGET_ROOT"
+    fi
     return
   fi
 
   log "[info] Installing Flow framework into project root"
   (
     cd "$FLOW_ROOT"
-    node tools/flow-install/index.mjs "${flow_args[@]}"
+    if ((${#flow_args[@]})); then
+      node tools/flow-install/index.mjs "${flow_args[@]}"
+    else
+      node tools/flow-install/index.mjs
+    fi
   )
 }
 
