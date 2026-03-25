@@ -1,6 +1,6 @@
 {{global}}
 
-## Flow Network Projects (Workspace)
+## Flow Harness Projects (Workspace)
 
 ### Flow Platform — POC (Active Primary)
 **Location:** `Focus/Flow/`

@@ -137,7 +137,7 @@ export const patchPackageJson = async (projectRoot, { dryRun = false, scriptsDir
 };
 
 // ---------------------------------------------------------------------------
-// Script generators (fallback if Flow Network scripts/ not available)
+// Script generators (fallback if Flow Harness scripts/ not available)
 // ---------------------------------------------------------------------------
 
 function generateRegisterSkills() {

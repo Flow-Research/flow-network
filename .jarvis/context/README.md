@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This directory is the canonical knowledge base for the Flow Network workspace. AI agents, Jarvis CLI, and human contributors read these files for project context.
+This directory is the canonical knowledge base for the Flow Harness workspace. AI agents, Jarvis CLI, and human contributors read these files for project context.
 
 ## Loading Order
 
@@ -71,7 +71,7 @@ Files may start with `{{global}}`. This is a **Jarvis CLI feature** that include
 
 ## Tiers
 
-- **Workspace-level** (this directory): Shared Flow Network truth
+- **Workspace-level** (this directory): Shared Flow Harness truth
 - **Project-level** (e.g. `Flow/.jarvis/context/`): Project-specific overrides and implementation details
 - Project-level files take precedence when working inside a specific sub-project
 

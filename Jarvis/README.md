@@ -21,7 +21,7 @@ A CLI tool for task scheduling and journaling that integrates with [AnyType](htt
 ### Installed CLI from this workspace (recommended)
 
 ```bash
-# From the Flow Network workspace root
+# From the Flow Harness workspace root
 uv tool install --force ./Jarvis
 
 # Run the installed CLI

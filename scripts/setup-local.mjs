@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 /**
- * Flow Network — Local setup wizard
+ * Flow Harness — Local setup wizard
  *
  * Creates personal context files, verifies Jarvis CLI, and registers skills.
- * Adapted from Accelerate Africa's setup-local.mjs for the Flow Network workspace.
+ * Adapted from Accelerate Africa's setup-local.mjs for the Flow Harness workspace.
  *
  * Usage:
  *   pnpm setup              # interactive wizard
@@ -204,7 +204,7 @@ const printSummary = async () => {
 // ---------------------------------------------------------------------------
 
 const main = async () => {
-  console.log("Flow Network — Local Setup\n");
+  console.log("Flow Harness — Local Setup\n");
 
   await ensureContextDirs();
   await setupLocalMd();

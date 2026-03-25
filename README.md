@@ -1,6 +1,6 @@
-# Flow Network
+# Flow Harness
 
-Flow Network is a reusable agent harness for software projects.
+Flow Harness is a reusable agent harness for software projects.
 
 It gives any repository a working AI operating layer with:
 

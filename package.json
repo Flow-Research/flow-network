@@ -1,7 +1,7 @@
 {
   "name": "flow-harness",
   "private": true,
-  "description": "Flow Network — agent harness for any project",
+  "description": "Flow Harness — agent harness for any project",
   "scripts": {
     "setup": "node scripts/setup-local.mjs",
     "skills:validate": "node scripts/flow/validate-skills.mjs",

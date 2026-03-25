@@ -1,4 +1,4 @@
-# Flow Network — Agent Instructions
+# Flow Harness — Agent Instructions
 
 ## Workspace Structure
 

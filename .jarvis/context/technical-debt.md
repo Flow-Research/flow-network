@@ -1,4 +1,4 @@
-# Technical Debt Register — Flow Network
+# Technical Debt Register — Flow Harness
 
 Project-level debt tracker. Every item follows the standard in `docs/standards/technical-debt-tracking-standard.md`.
 

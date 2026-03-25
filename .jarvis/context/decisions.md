@@ -1,6 +1,6 @@
 {{global}}
 
-## Flow Network Decisions
+## Flow Harness Decisions
 
 ### Flow Platform POC — Architecture Decisions
 

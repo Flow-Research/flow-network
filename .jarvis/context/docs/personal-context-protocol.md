@@ -1,7 +1,7 @@
 # Personal Context Protocol
 
 How personal (per-contributor) context is managed alongside shared (git-tracked)
-project context in the Flow Network workspace.
+project context in the Flow Harness workspace.
 
 ## Principle
 
