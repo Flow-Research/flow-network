@@ -10,9 +10,9 @@ import path from "node:path";
 const projectRoot = process.cwd();
 const home = os.homedir();
 const GLOBAL_SKILLS_DIR = path.join(home, ".agents", "skills");
-const GLOBAL_CLAUDE_SKILLS_DIR = path.join(home, ".claude", "skills");
 const GLOBAL_COMMUNITY_METADATA = path.join(home, ".agents", "community-install.json");
 const GLOBAL_CLAUDE_MARKETPLACE = path.join(home, ".agents", "claude-marketplace", ".claude-plugin", "marketplace.json");
+const GLOBAL_CLAUDE_SKILLS_DIR = path.join(home, ".claude", "skills");
 const GLOBAL_CLAUDE_SETTINGS = path.join(home, ".claude", "settings.json");
 const GLOBAL_OPENCODE_CONFIG = path.join(home, ".config", "opencode", "opencode.json");
 const DEFAULT_INSTALL_PATHS = {
@@ -87,7 +87,16 @@ const run = async () => {
   else fail("package.json harness:verify configured", pkg?.scripts?.["harness:verify"] || "missing");
 
   await requirePath("Global skills directory exists", GLOBAL_SKILLS_DIR);
-  await requirePath("Claude user skills directory exists", GLOBAL_CLAUDE_SKILLS_DIR);
+
+  // Verify ~/.claude/skills/ symlinks (primary discovery mechanism)
+  const claudeSkillsDir = path.join(home, ".claude", "skills");
+  if (await pathExists(claudeSkillsDir)) {
+    const claudeSkillEntries = await fs.readdir(claudeSkillsDir).catch(() => []);
+    if (claudeSkillEntries.length > 0) pass("Claude skills symlinks exist", String(claudeSkillEntries.length) + " symlinks in ~/.claude/skills/");
+    else fail("Claude skills symlinks exist", "~/.claude/skills/ is empty");
+  } else {
+    fail("Claude skills symlinks exist", "~/.claude/skills/ directory missing");
+  }
 
   const opencode = await readJsonSafe(GLOBAL_OPENCODE_CONFIG);
   const opencodePaths = [];
@@ -101,19 +110,6 @@ const run = async () => {
     if (opencodePaths.includes(normalizedProjectSkillsRoot)) pass("OpenCode has project-local skills path", normalizedProjectSkillsRoot);
     else fail("OpenCode has project-local skills path", normalizedProjectSkillsRoot);
   }
-
-  const claudeSettings = await readJsonSafe(GLOBAL_CLAUDE_SETTINGS);
-  const marketplace = await readJsonSafe(GLOBAL_CLAUDE_MARKETPLACE);
-  const marketplacePlugins = new Set(Array.isArray(marketplace?.plugins) ? marketplace.plugins.map((plugin) => plugin.name) : []);
-  const enabledPlugins = claudeSettings?.enabledPlugins || {};
-  if (claudeSettings?.extraKnownMarketplaces?.flow_network?.source?.path) pass("Claude marketplace configured", claudeSettings.extraKnownMarketplaces.flow_network.source.path);
-  else fail("Claude marketplace configured");
-  if (Array.isArray(marketplace?.plugins) && marketplace.plugins.length > 0) pass("Claude marketplace has plugins", String(marketplace.plugins.length));
-  else fail("Claude marketplace has plugins");
-  if (marketplacePlugins.has("flow-network")) pass("Claude marketplace contains Flow bundle plugin", "flow-network");
-  else fail("Claude marketplace contains Flow bundle plugin", "flow-network");
-  if (enabledPlugins["flow-network@flow_network"] === true) pass("Claude enabled Flow bundle plugin", "flow-network@flow_network");
-  else fail("Claude enabled Flow bundle plugin", "flow-network@flow_network");
 
   const localEntries = await fs.readdir(projectSkillsRoot, { withFileTypes: true }).catch(() => []);
   const localSkills = localEntries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
@@ -135,7 +131,7 @@ const run = async () => {
   }
   for (const skill of flowCoreSkills) {
     const globalSkillDir = path.join(GLOBAL_SKILLS_DIR, skill);
-    const claudeSkillDir = path.join(GLOBAL_CLAUDE_SKILLS_DIR, skill);
+    const claudeSkillLink = path.join(GLOBAL_CLAUDE_SKILLS_DIR, skill);
     const skillMdPath = path.join(globalSkillDir, "SKILL.md");
     if (await pathExists(globalSkillDir)) pass("Flow core skill installed globally", skill);
     else fail("Flow core skill installed globally", skill);
@@ -143,8 +139,8 @@ const run = async () => {
     else fail("Flow core skill has SKILL.md", skill);
     if (opencodePaths.includes(normalizedGlobal) && await pathExists(skillMdPath)) pass("OpenCode can resolve Flow core skill", skill);
     else fail("OpenCode can resolve Flow core skill", skill);
-    if (await pathExists(claudeSkillDir)) pass("Claude slash skill installed", skill);
-    else fail("Claude slash skill installed", skill);
+    if (await pathExists(claudeSkillLink)) pass("Claude skill symlink exists", skill);
+    else fail("Claude skill symlink exists", skill);
   }
 
   const communityConfig = (lockfile?.communitySkills && lockfile.communitySkills.mode !== "none")
@@ -175,7 +171,7 @@ const run = async () => {
   }
   for (const skill of expectedCommunitySkills) {
     const globalSkillDir = path.join(GLOBAL_SKILLS_DIR, skill);
-    const claudeSkillDir = path.join(GLOBAL_CLAUDE_SKILLS_DIR, skill);
+    const claudeSkillLink = path.join(GLOBAL_CLAUDE_SKILLS_DIR, skill);
     const skillMdPath = path.join(globalSkillDir, "SKILL.md");
     const missing = !(await pathExists(globalSkillDir));
     if (missing && communityConfig.strict) fail("Required community skill installed globally", skill);
@@ -191,17 +187,17 @@ const run = async () => {
       else if (communityConfig.strict) fail("OpenCode can resolve community skill", skill);
       else warn("OpenCode can resolve community skill", skill);
 
-      if (await pathExists(claudeSkillDir)) pass("Claude slash skill installed for community skill", skill);
-      else if (communityConfig.strict) fail("Claude slash skill installed for community skill", skill);
-      else warn("Claude slash skill installed for community skill", skill);
+      if (await pathExists(claudeSkillLink)) pass("Claude skill symlink for community skill", skill);
+      else if (communityConfig.strict) fail("Claude skill symlink for community skill", skill);
+      else warn("Claude skill symlink for community skill", skill);
     }
   }
 
   for (const skill of localSkills) {
     if (await pathExists(path.join(GLOBAL_SKILLS_DIR, skill))) pass("Global copy exists for local skill", skill);
     else fail("Global copy exists for local skill", skill);
-    if (await pathExists(path.join(GLOBAL_CLAUDE_SKILLS_DIR, skill))) pass("Claude slash skill installed for local skill", skill);
-    else fail("Claude slash skill installed for local skill", skill);
+    if (await pathExists(path.join(GLOBAL_CLAUDE_SKILLS_DIR, skill))) pass("Claude skill symlink for local skill", skill);
+    else fail("Claude skill symlink for local skill", skill);
     if (opencodePaths.includes(await normalizePath(projectSkillsRoot))) pass("OpenCode can resolve local skill", skill);
     else fail("OpenCode can resolve local skill", skill);
   }

@@ -98,16 +98,6 @@ const main = async () => {
     console.log("  " + (dryRun ? "Would remove" : "Removed") + " " + perSkillCleaned + " per-skill .claude-plugin/ dirs");
   }
 
-  // 5. ~/.claude/skills/ symlinks (superseded by marketplace plugin)
-  const claudeSkillsDir = path.join(HOME, ".claude", "skills");
-  if (await pathExists(claudeSkillsDir)) {
-    const symlinks = await fs.readdir(claudeSkillsDir).catch(() => []);
-    if (symlinks.length > 0) {
-      if (dryRun) { console.log("  Would remove " + symlinks.length + " stale symlinks from ~/.claude/skills/"); }
-      else { for (const name of symlinks) await fs.rm(path.join(claudeSkillsDir, name), { recursive: true, force: true }); console.log("  Removed " + symlinks.length + " stale symlinks from ~/.claude/skills/"); }
-    }
-  }
-
   console.log("\nDone");
 };
 
