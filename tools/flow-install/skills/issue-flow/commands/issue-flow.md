@@ -207,6 +207,62 @@ Phase 13 — PR creation and CI resolution
 Phase 14 — Final verification and acceptance
 Phase 15 — Closeout and GitHub sync
 
+## Phase Transition Validation
+
+Before advancing to any new phase, the orchestrator MUST validate the transition:
+
+### Validation Command
+
+```bash
+python3 "${AGENTS_SKILLS_ROOT}/issue-flow/scripts/issue_flow_validate_transition.py" check \
+    --state-path "${SPEC_ROOT}/<epic>/.issue-flow-state.json" \
+    --target-phase <N>
+```
+
+If the command exits non-zero, the transition is BLOCKED. Read the JSON output for the specific blocking reasons and resolve them before retrying.
+
+### Transition Table
+
+| From | To | Quality Gates Required | Human Gates Required | Artifact Commits Required | Pause Before Advance |
+|------|-----|----------------------|---------------------|--------------------------|---------------------|
+| 0 | 1 | issue_readiness_check | — | — | No |
+| 1 | 2 | brainstorm_discovery_gate | brainstorm_approval | — | No |
+| 2 | 3 | — | — | — | No |
+| **3** | **4** | **spec_gate** | **prd_approval** | **product_spec** | **YES — "start tech spec"** |
+| 4 | 5 | — | — | — | No |
+| **5** | **6** | **design_simplicity_gate** | **tech_spec_approval** | **technical_spec** | **YES — "start implementation"** |
+| 6 | 7 | — | execution_scope_approval | — | No |
+| 7 | 8 | — | — | — | No |
+| 8 | 9 | regression_coverage_gate | — | regression_spec | No |
+| 9 | 10 | generated_test_gate | — | — | No |
+| 10 | 11 | test_quality_gate | — | — | No |
+| 11 | 12 | qa_execution_gate | — | — | No |
+| 12 | 13 | implementation_simplicity_gate | — | — | No |
+| 13 | 14 | — | — | — | No |
+| **14** | **15** | **final_verification_gate** | **final_acceptance** | — | **YES — "close out"** |
+
+### Pause Protocol
+
+When a transition rule has `pause_after=true`:
+
+1. Complete all gate and artifact requirements for the current phase.
+2. Set phase status to `paused_awaiting_instruction`:
+   ```bash
+   python3 "${AGENTS_SKILLS_ROOT}/issue-flow/scripts/issue_flow_state.py" pause \
+       --state-path <path> \
+       --next-action "Await explicit user instruction to start tech spec"
+   ```
+3. Report the pause to the user with the exact trigger needed.
+4. DO NOT advance until the user explicitly provides the trigger instruction.
+
+### Hard Invariants
+
+1. Never advance phase while required human gates are pending.
+2. Never start tech-spec while `prd_approval != passed`.
+3. Never start tech-spec before PRD artifact commit-and-link is complete.
+4. Never auto-start any phase marked with `pause_after` — always wait for explicit user instruction.
+5. After artifact commit-and-link at a pause point, set `next_action` to describe what the user must say.
+
 ## Phase Rules
 
 ### Phase 0 — Intake, readiness check, and clarification recovery
@@ -261,6 +317,7 @@ Phase 15 — Closeout and GitHub sync
 - Human approval should confirm both delivery clarity and strategic fit for product- or workflow-shaping issues.
 - Stop for human approval before tech spec starts.
 - After the user approves `prd_approval`, execute the **Artifact Commit-and-Link** procedure for `product_spec.md` (artifact_key=`product_spec`, artifact_label="Product Spec (PRD)").
+- After artifact commit-and-link completes, run the **Pause Protocol**: set `phase.status` to `paused_awaiting_instruction` with `next_action` = "Await explicit user instruction to start tech spec." Report the pause and stop. Do NOT proceed to Phase 4 until the user explicitly says to start tech spec.
 - Update the state file with PRD review artifacts, `spec_gate` status, human approval status, artifact commit-and-link results, and `next_action`.
 
 ### Phase 4 — Tech spec
@@ -275,6 +332,7 @@ Phase 15 — Closeout and GitHub sync
 - Block advancement if the design is over-engineered, unjustifiably abstract, or poorly aligned with repo architecture.
 - Stop for human approval before implementation begins.
 - After the user approves `tech_spec_approval`, execute the **Artifact Commit-and-Link** procedure for `technical_spec.md` (artifact_key=`technical_spec`, artifact_label="Technical Spec").
+- After artifact commit-and-link completes, run the **Pause Protocol**: set `phase.status` to `paused_awaiting_instruction` with `next_action` = "Await explicit user instruction to start implementation planning." Report the pause and stop. Do NOT proceed to Phase 6 until the user explicitly says to start.
 - Update the state file with tech-spec review artifacts, `design_simplicity_gate`, human approval status, artifact commit-and-link results, and `next_action`.
 
 ### Phase 6 — Execution scope confirmation

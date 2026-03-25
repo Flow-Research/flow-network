@@ -3,9 +3,12 @@
 import argparse
 import copy
 import json
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict
+
+sys.path.insert(0, str(Path(__file__).parent))
 
 
 QUALITY_GATES = {
@@ -40,7 +43,7 @@ def now_iso() -> str:
 def default_state(spec_root: str, epic_name: str, epic_path: str) -> Dict[str, Any]:
     timestamp = now_iso()
     return {
-        "version": 2,
+        "version": 3,
         "updated_at": timestamp,
         "issue": {
             "number": None,
@@ -94,6 +97,11 @@ def default_state(spec_root: str, epic_name: str, epic_path: str) -> Dict[str, A
             "qa_summary": None,
             "qa_logs": [],
             "verification_report": None,
+        },
+        "artifact_commits": {
+            "product_spec": {"committed": False, "skipped": False},
+            "technical_spec": {"committed": False, "skipped": False},
+            "regression_spec": {"committed": False, "skipped": False},
         },
         "reconciliation": {
             "last_checked_at": None,
@@ -173,6 +181,10 @@ def parse_args() -> argparse.Namespace:
     status_parser = subparsers.add_parser("status")
     status_parser.add_argument("--state-path", required=True)
 
+    pause_parser = subparsers.add_parser("pause")
+    pause_parser.add_argument("--state-path", required=True)
+    pause_parser.add_argument("--next-action", required=True)
+
     return parser.parse_args()
 
 
@@ -206,6 +218,23 @@ def command_merge(args: argparse.Namespace) -> int:
     path = Path(args.state_path)
     state = load_state(path)
     incoming = json.loads(args.json)
+
+    # Phase transition guard
+    incoming_phase_id = incoming.get("phase", {}).get("id")
+    current_phase_id = state.get("phase", {}).get("id")
+    if incoming_phase_id is not None and incoming_phase_id != current_phase_id:
+        from issue_flow_validate_transition import validate_transition
+        is_valid, reasons = validate_transition(state, incoming_phase_id)
+        if not is_valid:
+            error = {
+                "error": "transition_blocked",
+                "current_phase": current_phase_id,
+                "target_phase": incoming_phase_id,
+                "blocking_reasons": reasons,
+            }
+            print(json.dumps(error, indent=2), file=sys.stderr)
+            return 1
+
     merged = deep_merge(state, incoming)
     merged_phase = merged.get("phase", {})
     if merged_phase:
@@ -223,6 +252,17 @@ def command_status(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_pause(args: argparse.Namespace) -> int:
+    path = Path(args.state_path)
+    state = load_state(path)
+    state["phase"]["status"] = "paused_awaiting_instruction"
+    state["next_action"] = args.next_action
+    append_history(state, "phase_paused", f"Paused: {args.next_action}", "issue-flow")
+    save_state(path, state)
+    print(json.dumps(state, indent=2))
+    return 0
+
+
 def main() -> int:
     args = parse_args()
     if args.command == "init":
@@ -231,6 +271,8 @@ def main() -> int:
         return command_merge(args)
     if args.command == "status":
         return command_status(args)
+    if args.command == "pause":
+        return command_pause(args)
     raise ValueError(f"Unknown command: {args.command}")
 
 
