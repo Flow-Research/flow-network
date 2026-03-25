@@ -1,10 +1,10 @@
 name: issue-flow
 type: opencode
-version: 0.2.0
+version: 0.3.0
 owner: julian
 status: experimental
 blast_radius: high
-description: "Drive one GitHub issue through clarification recovery, specs, implementation, regression generation, test generation, validation, QA, simplicity review, PR, and acceptance with enforced human review gates and quality gates."
+description: "Drive one GitHub issue through clarification recovery, specs, implementation, regression generation, test generation, validation, QA, simplicity review, PR, and acceptance with enforced human review gates, quality gates, and standardized sibling worktrees."
 permissions: [read-issues, read-projects, write-specs, write-state, write-reports, run-tests, run-validation, create-pr]
 data_categories: [none]
 egress: [api.github.com, github.com]
