@@ -40,7 +40,7 @@ def now_iso() -> str:
 def default_state(spec_root: str, epic_name: str, epic_path: str) -> Dict[str, Any]:
     timestamp = now_iso()
     return {
-        "version": 1,
+        "version": 2,
         "updated_at": timestamp,
         "issue": {
             "number": None,
@@ -60,6 +60,12 @@ def default_state(spec_root: str, epic_name: str, epic_path: str) -> Dict[str, A
             "updated_at": timestamp,
         },
         "mode": "discovery-recovery",
+        "git": {
+            "branch": None,
+            "base_branch": "main",
+            "worktree_strategy": "sibling-project-worktrees-v1",
+            "worktree_dirname": None,
+        },
         "github": {
             "issue_state": None,
             "project_status": None,
@@ -183,6 +189,13 @@ def command_init(args: argparse.Namespace) -> int:
         state["issue"]["url"] = args.issue_url
     if args.issue_title:
         state["issue"]["title"] = args.issue_title
+
+    state.setdefault("git", {})
+    if not state["git"].get("branch"):
+        state["git"]["branch"] = epic_name = state.get("epic", {}).get("name")
+        state["git"]["worktree_dirname"] = epic_name
+    state["git"].setdefault("base_branch", "main")
+    state["git"].setdefault("worktree_strategy", "sibling-project-worktrees-v1")
 
     save_state(path, state)
     print(json.dumps(state, indent=2))

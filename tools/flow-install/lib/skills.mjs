@@ -25,6 +25,7 @@ import {
   GLOBAL_OPENCODE_CONFIG,
   log,
 } from "./utils.mjs";
+import { runCleanup, buildCleanupContext } from "./cleanup.mjs";
 
 const GLOBAL_CLAUDE_KNOWN_MARKETPLACES = path.join(homeDir, ".claude", "plugins", "known_marketplaces.json");
 const FLOW_CLAUDE_PLUGIN_ID = "flow-network";
@@ -308,6 +309,10 @@ export const registerClaudeSkills = async ({ dryRun = false } = {}) => {
   // Update ~/.claude/settings.json
   await updateClaudeSettings(skills);
   await updateClaudeKnownMarketplaces();
+
+  // Clean up stale artifacts from old per-skill registration approach
+  const cleanupCtx = buildCleanupContext(skills, { dryRun, log });
+  await runCleanup(cleanupCtx);
 
   log.ok(`Registered ${skills.length} skills with Claude Code`);
 };

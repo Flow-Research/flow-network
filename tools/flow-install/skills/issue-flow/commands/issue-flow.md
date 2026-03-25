@@ -34,6 +34,32 @@ Treat every epic path in this workflow as `${SPEC_ROOT}/<epic>/...`.
 - Git branch: !`git branch --show-current 2>/dev/null || echo "N/A"`
 - Spec root: !`bash "${HOME}/.agents/skills/build-e2e/scripts/resolve-spec-root.sh" 2>/dev/null || printf '%s\n' specs`
 
+## Canonical Worktree Strategy
+
+Issue-flow uses a standardized sibling worktree root outside the project folder:
+
+```text
+../<project-folder-name>-worktrees/<issue_id>_<friendly_name>
+```
+
+Examples:
+
+- repo root: `/code/Accelerate Africa`
+- worktree root: `/code/Accelerate Africa-worktrees`
+- issue worktree: `/code/Accelerate Africa-worktrees/113_program-team-selection`
+- if invoked from `/code/Accelerate Africa-worktrees/112_program-team-sourcing`, the canonical worktree root still remains `/code/Accelerate Africa-worktrees`
+
+Derive this path at runtime using `${AGENTS_SKILLS_ROOT}/issue-flow/scripts/issue_flow_git.py`.
+
+The canonical worktree root is always derived from the canonical repository root, never from the current worktree checkout directory. If `issue-flow` is invoked from an existing worktree, it must still target the sibling root based on the parent repository name rather than appending `-worktrees` to the current issue folder name.
+
+Rules:
+
+- Never store machine-specific absolute worktree paths in `.issue-flow-state.json`.
+- Store only portable git metadata (`branch`, `worktree_dirname`, strategy).
+- New issue-flow runs must create or reuse the canonical sibling worktree immediately.
+- Legacy runs without git metadata remain supported; migrate them lazily when the issue next enters active execution.
+
 ## State File Location
 
 Each issue-flow epic has its own resumable checkpoint file:
@@ -65,6 +91,7 @@ The state file must track at minimum:
 - `epic.name`, `epic.path`, `epic.spec_root`
 - `phase.id`, `phase.name`, `phase.status`, `phase.started_at`, `phase.updated_at`
 - `mode` (`execution-ready` or `discovery-recovery`)
+- `git.branch`, `git.base_branch`, `git.worktree_strategy`, `git.worktree_dirname`
 - `github.issue_state`, `github.project_status`, `github.project_title`, `github.pr_url`, `github.ci_url`, `github.last_sync_at`
 - `gates.quality.*`
 - `gates.human.*`
@@ -80,8 +107,10 @@ The state file must track at minimum:
 
 1. Load the GitHub issue.
 2. Resolve or create the epic folder under `${SPEC_ROOT}`.
-3. Create or update `${SPEC_ROOT}/<epic>/.issue-flow-state.json`.
-4. Seed issue metadata, epic metadata, current phase, mode, and initial next action.
+3. Derive the canonical issue branch name as `<issue_id>_<friendly_name>`. Use the epic slug unless a repo-specific branch convention overrides it.
+4. Create or reuse the canonical sibling worktree for that branch using `${AGENTS_SKILLS_ROOT}/issue-flow/scripts/issue_flow_git.py create ...`.
+5. Create or update `${SPEC_ROOT}/<epic>/.issue-flow-state.json` from inside that worktree.
+6. Seed issue metadata, epic metadata, portable git metadata, current phase, mode, and initial next action.
 
 ### `continue`
 
@@ -89,17 +118,18 @@ The state file must track at minimum:
    - explicit issue argument if provided
    - existing `.issue-flow-state.json` that matches the active issue
    - most recently modified `.issue-flow-state.json`
-2. Read the state file.
-3. Reconcile state against GitHub, local artifacts, and git worktree.
-4. Update non-controversial fields in `.issue-flow-state.json`.
-5. Resume from the highest fully-complete phase whose required gates are passed.
+2. Resolve the canonical sibling worktree root and search there first for matching `.issue-flow-state.json` files.
+3. Read the state file.
+4. Reconcile state against GitHub, local artifacts, and git worktree.
+5. Update non-controversial fields in `.issue-flow-state.json`.
+6. Resume from the highest fully-complete phase whose required gates are passed, running inside the resolved issue worktree.
 
 ### `status`
 
 1. Resolve the target epic using the same rules as `continue`.
 2. Read `${SPEC_ROOT}/<epic>/.issue-flow-state.json`.
-3. Reconcile against GitHub and local artifacts.
-4. Report current phase, mode, gate status, blockers, artifacts, and next action.
+3. Reconcile against GitHub, local artifacts, and canonical worktree state.
+4. Report current phase, mode, gate status, blockers, artifacts, next action, branch name, worktree strategy, and the runtime-derived canonical worktree path.
 
 ## Reconciliation Rules
 
@@ -109,8 +139,18 @@ On `issue`, `continue`, and `status`, perform a project-state investigation:
 2. Verify the state file exists, or initialize it if this is a new run.
 3. Compare state metadata with the actual GitHub issue and optional project item.
 4. Compare state artifact paths with files actually present under `${SPEC_ROOT}/<epic>/`.
-5. Compare recorded PR / CI links with actual GitHub state when available.
-6. Compare implementation-related progress with the current git branch/worktree.
+5. Compare stored portable git metadata with the derived canonical branch/worktree model.
+6. Compare recorded PR / CI links with actual GitHub state when available.
+7. Compare implementation-related progress with the current git branch/worktree.
+
+Canonical worktree reconciliation rules:
+
+- Derive the canonical worktree root from the current repository using `${AGENTS_SKILLS_ROOT}/issue-flow/scripts/issue_flow_git.py info`.
+- If `git.branch` exists in state, derive the canonical worktree path from `git.worktree_dirname` or `git.branch`.
+- If a matching branch is attached in `git worktree list --porcelain`, treat that attachment as authoritative runtime location.
+- If the canonical worktree directory is missing but the branch exists, recreate the worktree at the canonical location.
+- If state has no `git.*` block, treat it as a legacy run and derive the portable branch metadata from the epic name before implementation begins.
+- Never write runtime absolute paths back into tracked state.
 
 If state is behind actual progress:
 
@@ -178,8 +218,9 @@ Phase 15 — Closeout and GitHub sync
 - After the user approves the synthesized clarification, append the approved update to the existing GitHub issue. Never overwrite existing issue content.
 - Refuse execution only if the issue cannot be made testable after bounded clarification attempts or required approval is withheld.
 - Locate or create the epic path under `${SPEC_ROOT}`.
+- Create or reuse the canonical sibling worktree for the issue branch immediately and continue the issue-flow cycle from there.
 - Reconcile local state and GitHub state before proceeding.
-- Initialize or update `.issue-flow-state.json` with issue metadata, epic metadata, mode, phase, gate defaults, and artifact pointers.
+- Initialize or update `.issue-flow-state.json` with issue metadata, epic metadata, portable git metadata, mode, phase, gate defaults, and artifact pointers.
 - Append a `history` event whenever the issue classification or epic association changes.
 
 ### Phase 1 — Brainstorm
@@ -225,10 +266,12 @@ Phase 15 — Closeout and GitHub sync
 - Confirm the smallest valid implementation slice.
 - Record any intentional deferrals as technical debt.
 - Stop for human approval before coding starts.
+- If this issue is a legacy run without `git.*` metadata, derive the branch/worktree metadata now and migrate execution into the canonical sibling worktree before Phase 7 starts.
 - Update the state file with blockers, scope notes, debt links, execution-scope approval status, and `next_action`.
 
 ### Phase 7 — Implementation
 - Invoke `engineer`.
+- Run implementation from the resolved issue worktree, not the user's unrelated checkout.
 - Implement only the approved scope.
 - Maintain evidence that maps implementation work to acceptance criteria.
 - Update the state file with implementation evidence pointers and relevant git/GitHub references.
@@ -275,6 +318,7 @@ Phase 15 — Closeout and GitHub sync
 - Update the GitHub issue and any associated project item.
 - Record final evidence summary, PR link, CI status, and any follow-up debt/issues.
 - Move to Done only after human acceptance is recorded.
+- Keep the worktree through PR and acceptance by default; remove it only after final acceptance or an explicit cleanup policy decision.
 - Update `.issue-flow-state.json` with final GitHub sync details, unresolved follow-up links, final phase status, and a closing `history` event.
 
 ## Quality Gates
@@ -329,6 +373,7 @@ For every status update, include:
 - For brainstorm specifically: questions asked, answers received, unresolved questions, and whether the user explicitly confirmed alignment
 - State file path
 - Reconciliation result and whether the state file was updated from external evidence
+- Branch name, worktree strategy, and runtime-derived canonical worktree path
 
 ## Hard Stop Conditions
 
