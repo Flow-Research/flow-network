@@ -1,0 +1,14 @@
+# Local Context (Machine-Specific)
+
+> This file is gitignored. Copy to `local.md` and fill in your values.
+
+## External Projects
+
+| Project | Local Path | Notes |
+|---------|------------|-------|
+| Jarvis CLI | | Python 3.11+ AI assistant CLI. Use `uv run jarvis <command>` |
+
+## Environment Notes
+
+- Node version manager: nvm / fnm / volta
+- Default Node version: 22

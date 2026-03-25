@@ -256,6 +256,7 @@ export const registerClaudeSkills = async ({ dryRun = false } = {}) => {
     return;
   }
 
+  // Sync ~/.claude/skills/ symlinks — primary discovery mechanism for Claude Code
   await syncClaudeSkillLinks(skills, { dryRun });
 
   // Generate one real Claude plugin that bundles all skills
@@ -321,20 +322,16 @@ const updateClaudeSettings = async (skills) => {
   const settingsPath = GLOBAL_CLAUDE_SETTINGS;
   const existing = await readJsonSafe(settingsPath) || {};
 
-  // Ensure extraKnownMarketplaces
-  if (!existing.extraKnownMarketplaces) existing.extraKnownMarketplaces = {};
-  existing.extraKnownMarketplaces.flow_network = {
-    source: { source: "directory", path: GLOBAL_CLAUDE_MARKETPLACE }
-  };
+  // Remove all flow_network marketplace/plugin references
+  // Symlinks in ~/.claude/skills/ are the primary discovery mechanism
+  if (existing.extraKnownMarketplaces) {
+    delete existing.extraKnownMarketplaces.flow_network;
+    delete existing.extraKnownMarketplaces.duru_claude_plugins;
+  }
 
-  // Remove old marketplace references
-  delete existing.extraKnownMarketplaces.duru_claude_plugins;
-
-  // Enable bundled plugin
   if (!existing.enabledPlugins) existing.enabledPlugins = {};
-  existing.enabledPlugins[`${FLOW_CLAUDE_PLUGIN_ID}@flow_network`] = true;
-
-  // Clean up old monolithic plugin references
+  // Clean up all flow_network plugin references (bundled and individual)
+  delete existing.enabledPlugins[`${FLOW_CLAUDE_PLUGIN_ID}@flow_network`];
   delete existing.enabledPlugins["flow-skills@flow_network"];
   for (const skill of skills) {
     delete existing.enabledPlugins[`${skill.name}@flow_network`];

@@ -15,6 +15,7 @@ import { pathExists, ensureDir, log } from "./utils.mjs";
 
 const CONTEXT_DIRS = [
   "docs",
+  "docs/strategy",
   "skills",
   "specs",
   "plans",
@@ -67,6 +68,7 @@ export const scaffoldContext = async (projectRoot, { dryRun = false, contextDirR
     "roadmap.md": generateRoadmapTemplate(),
     "team.md": generateTeamTemplate(),
     "technical-debt.md": generateTechDebtTemplate(),
+    "docs/strategy/README.md": generateStrategyReadme(),
   };
 
   for (const [filename, content] of Object.entries(stubs)) {
@@ -152,11 +154,21 @@ This directory is the canonical knowledge base for this project. AI agents, Jarv
 3. \`team.md\` — Canonical ownership and coordination guide
 4. \`technical-debt.md\` — Canonical debt register for intentional shortcuts and cleanup
 
+For strategy, ideation, issue intake, PRD, and architecture tradeoff work, also read:
+5. \`docs/strategy/README.md\` — Strategy folder guide and suggested read order
+6. The relevant strategy docs linked from \`docs/strategy/README.md\`
+
 ## Optional Supporting Docs
 
 - \`projects.md\` — Workspace or repo inventory when present
 - \`decisions.md\` — Settled architectural decisions when present
 - \`AGENTS.md\` — Full Flow agent protocol for this installed repo
+
+## Standard Strategy Folder
+
+- \`docs/strategy/\` is the standard home for strategic intent, operating thesis, and business-model documents.
+- Use it to store org-level strategy docs that explain why the product exists, what leverage it creates, and which workflows matter most.
+- Issue intake and brainstorming should cite this folder when it exists.
 
 ## Memory System
 
@@ -190,6 +202,39 @@ function generateLocalMdExample() {
 
 - Node version manager: nvm / fnm / volta
 - Default Node version: 22
+`;
+}
+
+function generateStrategyReadme() {
+  return `# Strategy Docs
+
+Use this folder for strategic intent, operating thesis, and business-model documents that explain why the product exists, what leverage it should create, and how the organization expects to win.
+
+## What Belongs Here
+
+- Company or org vision documents
+- Product or platform strategy briefs
+- Operating-model writeups
+- Market, customer, or workflow theses
+- Strategic non-goals and sequencing memos
+
+## Agent Guidance
+
+Read this folder when working on:
+
+- issue intake and discovery recovery
+- brainstorming and ideation
+- PRDs and roadmap shaping
+- architecture tradeoffs that depend on business model or operating constraints
+
+When this folder exists, issue-flow artifacts should cite the strategy sources consulted and explain how the proposed work aligns with them.
+
+## Suggested Read Order
+
+1. Start with the most compact thesis or overview doc.
+2. Read the main vision or strategy brief.
+3. Read workflow-specific or domain-specific strategy docs.
+4. Capture the exact docs used in issue_intake.md and brainstorm.md.
 `;
 }
 

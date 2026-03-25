@@ -211,9 +211,18 @@ Phase 15 — Closeout and GitHub sync
 
 ### Phase 0 — Intake, readiness check, and clarification recovery
 - Load the GitHub issue and any available project metadata.
+- Detect whether a standard strategy folder exists for the repo. Prefer `.jarvis/context/docs/strategy/`; if that is unavailable, check `docs/strategy/`.
+- When a strategy folder exists, read `docs/strategy/README.md` first and then the most relevant linked strategy docs before finalizing intake classification.
 - Extract problem, goal, scope, non-goals, acceptance criteria, dependencies, blockers, labels, assignee, and project status.
+- Record strategy evidence in `issue_intake.md` using these sections when a strategy folder exists:
+  - `Strategy Sources Consulted`
+  - `Strategic Context`
+  - `Strategic Alignment Hypothesis`
+  - `Strategy Gaps / Questions`
+- If no strategy folder exists, explicitly record that strategy context was unavailable rather than silently skipping it.
 - Classify the issue as either `execution-ready` or `discovery-recovery`.
 - If acceptance criteria are missing or not testable, do not fail immediately. Enter `discovery-recovery` mode and route into the mandatory brainstorm clarification path.
+- If the issue materially changes product direction, workflow design, prioritization, or business-facing behavior, do not finalize `execution-ready` classification until strategy context has been checked or explicitly marked unavailable.
 - In `discovery-recovery` mode, use brainstorm outputs to derive problem statement, target audience, scope, non-goals, success criteria, and draft testable acceptance criteria.
 - After the user approves the synthesized clarification, append the approved update to the existing GitHub issue. Never overwrite existing issue content.
 - Refuse execution only if the issue cannot be made testable after bounded clarification attempts or required approval is withheld.
@@ -230,8 +239,9 @@ Phase 15 — Closeout and GitHub sync
   2. artifact generation after discovery alignment
 - The interactive discovery step is mandatory unless the user explicitly says there are no further clarifications needed.
 - During discovery, ask one clarifying question at a time and capture answer evidence.
-- Resolve at minimum the problem framing, target decision/user, intended scope, success criteria, and key exclusions/constraints.
+- Resolve at minimum the problem framing, target decision/user, intended scope, success criteria, strategy alignment, and key exclusions/constraints.
 - Produce both `brainstorm.md` and transcript evidence (`brainstorm_transcript.md` or `brainstorm_notes.md`).
+- When a strategy folder exists, the brainstorm artifact must capture the strategy sources consulted, the relevant strategic fit, and any strategy-derived non-goals or open questions.
 - When the issue entered `discovery-recovery` mode, use these artifacts to synthesize a proposed issue clarification update that includes draft testable acceptance criteria.
 - The proposed issue clarification update must be append-only and must preserve the original issue text.
 - Do not mark Phase 1 complete if the artifact was drafted from repo context alone without the required user clarification loop.
@@ -242,17 +252,20 @@ Phase 15 — Closeout and GitHub sync
 ### Phase 2 — PRD
 - Invoke `prd`.
 - Produce `product_spec.md` with explicit, testable acceptance criteria.
+- Carry forward the strategy-derived goals, non-goals, and workflow constraints from intake and brainstorm instead of rediscovering them ad hoc.
 - Update the state file with the PRD artifact path and phase progress.
 
 ### Phase 3 — PRD review
 - Invoke `prd-spec-review`.
 - Resolve all blocking review issues.
+- Human approval should confirm both delivery clarity and strategic fit for product- or workflow-shaping issues.
 - Stop for human approval before tech spec starts.
 - Update the state file with PRD review artifacts, `spec_gate` status, human approval status, and `next_action`.
 
 ### Phase 4 — Tech spec
 - Invoke `tech-spec`.
 - Produce `technical_spec.md` that is minimal, coherent, and repo-fit.
+- Preserve only the strategy-derived constraints that materially affect architecture, sequencing, or implementation boundaries.
 - Update the state file with the tech spec artifact path and phase progress.
 
 ### Phase 5 — Tech spec review
@@ -326,8 +339,9 @@ Phase 15 — Closeout and GitHub sync
 Do not advance a phase without the required evidence.
 
 - `Issue Readiness Check` — issue is classified correctly as `execution-ready` or `discovery-recovery`
+- `Strategy Context Check` — relevant strategy docs were consulted and cited when available, or strategy unavailability was explicitly recorded
 - `Issue Clarification Recovery Gate` — if the issue started in `discovery-recovery`, approved brainstorm artifacts exist, draft testable acceptance criteria exist, and the approved clarification has been appended to the existing issue without overwriting prior content
-- `Brainstorm Discovery Gate` — interactive clarification happened, key questions were answered or explicitly waived, and transcript evidence exists
+- `Brainstorm Discovery Gate` — interactive clarification happened, key questions were answered or explicitly waived, transcript evidence exists, and strategy fit was captured when strategy docs were available
 - `Spec Gate` — PRD and tech spec reviews have no blocking issues
 - `Design Simplicity Gate` — tech spec is simple, justified, and repo-fit
 - `Regression Coverage Gate` — criteria map to regression scenarios
@@ -361,6 +375,7 @@ For every status update, include:
 
 - Current phase
 - Current mode (`execution-ready` or `discovery-recovery`)
+- Strategy sources consulted (or explicit note that none were available)
 - Skills used
 - Artifacts produced
 - Quality gate result
@@ -378,6 +393,7 @@ For every status update, include:
 ## Hard Stop Conditions
 
 - issue acceptance criteria remain missing or not testable after bounded brainstorm-based clarification attempts
+- a product- or workflow-shaping issue cannot be aligned to strategy and the missing strategic basis would materially change delivery intent
 - state between GitHub and local epic cannot be reconciled safely
 - required human review is not approved
 - a quality gate fails after bounded repair attempts
@@ -389,6 +405,7 @@ For every status update, include:
 The issue is done only when:
 
 - approved brainstorm, PRD, and tech spec artifacts exist
+- the intake and brainstorm artifacts record strategy sources consulted when available, or explicitly note strategy unavailability
 - if the issue started underspecified, an approved append-only clarification update has been added to the existing GitHub issue and preserved the original issue content
 - implementation matches approved specs
 - regression scenarios exist

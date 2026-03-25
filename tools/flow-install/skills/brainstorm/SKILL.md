@@ -9,7 +9,7 @@ argument-hint: "[resume] or start fresh"
 # Brainstorm
 
 ## Purpose
-Develop raw ideas into well-defined concepts through thoughtful questioning and structured exploration.
+Develop raw ideas into well-defined concepts through thoughtful questioning and structured exploration, including explicit strategic fit when a standard `docs/strategy/` folder or business thesis exists.
 
 ## Inputs
 - Optional argument: `resume` to continue an existing brainstorm

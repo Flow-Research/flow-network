@@ -14,7 +14,7 @@ import { log, pathExists, promptConfirm, readFileSafe } from "./utils.mjs";
 
 const FLOW_CONTEXT_START = "<!-- flow-context:start -->";
 const FLOW_CONTEXT_END = "<!-- flow-context:end -->";
-export const CONTEXT_AGENTS_VERSION = "1.0.0";
+export const CONTEXT_AGENTS_VERSION = "1.1.0";
 
 const generateManagedSection = (installPaths) => `${FLOW_CONTEXT_START}
 ## Flow Protocol
@@ -25,9 +25,10 @@ This repo is Flow-managed. Use this file as the canonical Flow agent protocol fo
 
 1. Read \`${installPaths.contextDir}/README.md\`
 2. Load context in order: \`status.md\` -> \`roadmap.md\` -> \`team.md\` -> \`technical-debt.md\`
-3. Treat \`projects.md\` and \`decisions.md\` as optional supporting docs when present
-4. Check \`${installPaths.contextDir}/skills/_catalog.md\` for project catalog entries
-5. Prefer deeper sub-project context when working inside a nested app with its own \`.jarvis/context/\`
+3. For ideation, issue intake, PRD, roadmap, and architecture tradeoff work, read \`${installPaths.contextDir}/docs/strategy/README.md\` when it exists, then load the relevant strategy docs it points to
+4. Treat \`projects.md\` and \`decisions.md\` as optional supporting docs when present
+5. Check \`${installPaths.contextDir}/skills/_catalog.md\` for project catalog entries
+6. Prefer deeper sub-project context when working inside a nested app with its own \`.jarvis/context/\`
 
 ### Skills
 
@@ -39,6 +40,7 @@ This repo is Flow-managed. Use this file as the canonical Flow agent protocol fo
 ### Context Vault
 
 - Canonical context root: \`${installPaths.contextDir}/\`
+- Standard strategy folder: \`${installPaths.contextDir}/docs/strategy/\`
 - Memory scope registry: \`${installPaths.contextDir}/scopes/_scopes.yaml\`
 - Technical debt register: \`${installPaths.contextDir}/technical-debt.md\`
 - Template token \`{{global}}\` is Jarvis templating; treat it as a no-op in raw files

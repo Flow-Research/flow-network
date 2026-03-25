@@ -15,9 +15,10 @@ This repo is Flow-managed. Use this file as the canonical Flow agent protocol fo
 
 1. Read `.jarvis/context/README.md`
 2. Load context in order: `status.md` -> `roadmap.md` -> `team.md` -> `technical-debt.md`
-3. Treat `projects.md` and `decisions.md` as optional supporting docs when present
-4. Check `.jarvis/context/skills/_catalog.md` for project catalog entries
-5. Prefer deeper sub-project context when working inside a nested app with its own `.jarvis/context/`
+3. For ideation, issue intake, PRD, roadmap, and architecture tradeoff work, read `.jarvis/context/docs/strategy/README.md` when it exists, then load the relevant strategy docs it points to
+4. Treat `projects.md` and `decisions.md` as optional supporting docs when present
+5. Check `.jarvis/context/skills/_catalog.md` for project catalog entries
+6. Prefer deeper sub-project context when working inside a nested app with its own `.jarvis/context/`
 
 ### Skills
 
@@ -29,6 +30,7 @@ This repo is Flow-managed. Use this file as the canonical Flow agent protocol fo
 ### Context Vault
 
 - Canonical context root: `.jarvis/context/`
+- Standard strategy folder: `.jarvis/context/docs/strategy/`
 - Memory scope registry: `.jarvis/context/scopes/_scopes.yaml`
 - Technical debt register: `.jarvis/context/technical-debt.md`
 - Template token `{{global}}` is Jarvis templating; treat it as a no-op in raw files
@@ -38,4 +40,4 @@ This repo is Flow-managed. Use this file as the canonical Flow agent protocol fo
 - Never commit `.env` files; use `.env.example`
 - Personal context belongs in `.jarvis/context/private/<username>/`
 - Keep debt tracked in the debt registers, not only in chat or TODO comments
-<!-- flow-context:end -->>
+<!-- flow-context:end -->>>

@@ -53,6 +53,11 @@ Focus on these areas progressively:
 - "Are there any constraints (time, budget, technology, skills)?"
 - "What does success look like?"
 
+#### Strategy & Operating Fit
+- "Is there an existing strategy, thesis, or operating-model doc this should align with?"
+- "How does this support the organization's leverage model, workflow priorities, or business goals?"
+- "What should we explicitly not do yet because it does not fit the current strategy or sequencing?"
+
 #### Vision & Feel
 - "What's the emotional response you want users/viewers to have?"
 - "Are there any reference points, inspirations, or 'it's like X meets Y' comparisons?"
@@ -74,6 +79,7 @@ Before proceeding to documentation, confirm clarity by summarizing:
 - The primary problem/opportunity
 - The target audience
 - Key differentiators
+- The strategic fit and the main strategy constraints or non-goals
 - Success criteria
 
 Ask: "Does this capture the essence of what you're thinking? What would you add, remove, or change?"
@@ -153,6 +159,7 @@ Stop discovery and move to documentation when ANY of these are true:
 5. **Challenge gently** — Ask "what if" and "why" to stress-test ideas without being dismissive
 6. **Know when to stop** — Don't over-question; when there's enough to document, proceed
 7. **Stay neutral** — Explore all directions without judgment until the user commits to a path
+8. **Make strategy explicit** — If strategy docs or business thesis exist, surface them as cited context rather than leaving alignment implicit
 
 ## Facilitation Tips
 

@@ -24,6 +24,17 @@
 - What makes this different
 - Why this approach over alternatives
 
+## Strategy Context
+
+- Strategy or thesis documents consulted
+- The operating model, leverage thesis, or business context that makes this worth doing
+
+## Strategic Fit
+
+- How this idea supports the organization's strategy
+- Which workflows, user groups, or business outcomes it strengthens
+- Which constraints or sequencing decisions come from strategy
+
 ## Inspiration & References
 
 - Similar products, projects, or concepts
@@ -42,6 +53,12 @@
 
 - Unresolved aspects to explore further
 - Assumptions that need validation
+- Strategic uncertainties that could change scope or prioritization
+
+## Non-Goals / Strategic Exclusions
+
+- What this should explicitly not try to solve in this phase
+- Which adjacent ideas are intentionally deferred
 
 ## Next Steps
 

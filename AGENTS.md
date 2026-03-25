@@ -24,7 +24,7 @@ node tools/flow-install/index.mjs --yes
 
 ## Context Loading
 
-Read `.jarvis/context/README.md` for the knowledge base protocol. Start with `projects.md`, `status.md`, and `roadmap.md` for orientation.
+Read `.jarvis/context/README.md` for the knowledge base protocol. Start with `status.md`, `roadmap.md`, and `team.md` for orientation. For ideation, issue intake, PRD, and architecture tradeoff work, also read `.jarvis/context/docs/strategy/README.md` when it exists and follow its suggested read order.
 
 ## Key Commands
 

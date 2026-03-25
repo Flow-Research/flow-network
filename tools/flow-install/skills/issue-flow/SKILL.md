@@ -9,7 +9,7 @@ argument-hint: "[continue|status|issue <number-or-url>]"
 # Issue Flow
 
 ## Purpose
-Drive one GitHub issue through the full Flow delivery lifecycle using the repository's existing skills, mandatory evaluation gates, and explicit human review checkpoints. GitHub Project metadata is optional enrichment, not a required intake dependency.
+Drive one GitHub issue through the full Flow delivery lifecycle using the repository's existing skills, mandatory evaluation gates, explicit human review checkpoints, and strategy-aware intake when a standard `docs/strategy/` folder exists. GitHub Project metadata is optional enrichment, not a required intake dependency.
 
 ## Inputs
 - Optional arguments: `continue`, `status`, or `issue <number-or-url>`

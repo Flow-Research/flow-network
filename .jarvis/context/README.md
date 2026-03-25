@@ -12,20 +12,24 @@ For **general context**, read in this order:
 3. `team.md` — Ownership, delegation, and coordination model
 4. `technical-debt.md` — Current debt register and cleanup obligations
 
+For **strategy, ideation, issue intake, PRD, and architecture tradeoff** work, also read:
+5. `docs/strategy/README.md` — Strategy folder guide and suggested read order when present
+6. The relevant strategy docs linked from `docs/strategy/README.md`
+
 Optional supporting docs when relevant:
-5. `projects.md` — Workspace inventory, paths, and project roles
-6. `decisions.md` — Settled architectural and economic decisions
+7. `projects.md` — Workspace inventory, paths, and project roles
+8. `decisions.md` — Settled architectural and economic decisions
 
 For **architecture/design** tasks, also read:
-7. `docs/flow-poc-architecture.md` — Current POC system architecture
-8. `docs/flow-deep-system-analysis.md` — Reference analysis of the broader Flow vision
+9. `docs/flow-poc-architecture.md` — Current POC system architecture
+10. `docs/flow-deep-system-analysis.md` — Reference analysis of the broader Flow vision
 
 For **development** tasks, also read:
-9. `docs/standards/development-guidance.md` — Workspace engineering workflow guidance
+11. `docs/standards/development-guidance.md` — Workspace engineering workflow guidance
 
 For **meeting context**, browse:
-10. `meetings/PROTOCOL.md` — Meeting notes template and naming convention
-11. `meetings/YYYY/Mon/DD-<title>.md` — Individual meeting notes (most recent first)
+12. `meetings/PROTOCOL.md` — Meeting notes template and naming convention
+13. `meetings/YYYY/Mon/DD-<title>.md` — Individual meeting notes (most recent first)
 
 ## Canonical Root Files
 
@@ -54,6 +58,12 @@ For **meeting context**, browse:
 | `docs/flow-v1-unit-economics-model-appendix.md` | Detailed unit economics appendix | 2026-03 |
 | `docs/contribution-protocol.md` | Contribution workflow for Flow core, skills, knowledge, and memory | 2026-03 |
 | `docs/skill-promotion-maintainer-playbook.md` | Maintainer-specific skill promotion workflow | 2026-03 |
+
+## Standard Strategy Folder
+
+- `docs/strategy/` is the standard home for strategic intent, operating thesis, and business-model documents.
+- Repos adopting Flow should store org-level strategy docs there and keep a `docs/strategy/README.md` index.
+- `issue-flow` and brainstorming should cite this folder when it exists so epics and issues stay aligned with strategy instead of only local implementation context.
 
 ## Template Syntax
 

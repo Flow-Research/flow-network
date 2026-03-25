@@ -35,6 +35,7 @@ const PATHS = {
   pluginCache: path.join(homeDir, ".claude", "plugins", "cache", "flow_network"),
   marketplace: GLOBAL_CLAUDE_MARKETPLACE,
   globalSkills: GLOBAL_SKILLS_DIR,
+  claudeSkills: path.join(homeDir, ".claude", "skills"),
 };
 
 // ---------------------------------------------------------------------------
@@ -136,6 +137,37 @@ export const CLEANUP_TASKS = [
         }
       }
       return { cleaned, details: ".claude-plugin/ dirs" };
+    },
+  },
+
+  {
+    name: "marketplace-plugin-registration",
+    description: "Remove flow_network marketplace plugin from settings (symlinks are primary discovery)",
+
+    check: async (ctx) => {
+      const settings = await readJsonSafe(path.join(homeDir, ".claude", "settings.json"));
+      if (!settings) return { stale: false };
+      const hasPlugin = settings.enabledPlugins?.[`${ctx.pluginId}@flow_network`];
+      const hasMarketplace = settings.extraKnownMarketplaces?.flow_network;
+      if (!hasPlugin && !hasMarketplace) return { stale: false };
+      return { stale: true, count: 1, details: "marketplace plugin enabled in settings.json (causes duplicates)" };
+    },
+
+    clean: async (ctx) => {
+      const settingsPath = path.join(homeDir, ".claude", "settings.json");
+      const settings = await readJsonSafe(settingsPath);
+      if (!settings) return { cleaned: 0 };
+      let changed = false;
+      if (settings.enabledPlugins?.[`${ctx.pluginId}@flow_network`]) {
+        delete settings.enabledPlugins[`${ctx.pluginId}@flow_network`];
+        changed = true;
+      }
+      if (settings.extraKnownMarketplaces?.flow_network) {
+        delete settings.extraKnownMarketplaces.flow_network;
+        changed = true;
+      }
+      if (changed) await writeJson(settingsPath, settings);
+      return { cleaned: changed ? 1 : 0, details: "marketplace plugin disabled in settings.json" };
     },
   },
 ];

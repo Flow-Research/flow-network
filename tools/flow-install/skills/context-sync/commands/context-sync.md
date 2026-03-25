@@ -13,6 +13,8 @@ Primary user intents:
 
 Default target branch is the repository integration branch from `.flow/delivery-profile.json` when present; otherwise fall back to `dev`.
 
+When running inside an issue-flow worktree, context-sync auto-detects the issue context and adjusts defaults — pulling/pushing against the issue's base branch instead of the integration branch, enriching commit messages with the issue reference, and handling state file conflicts interactively.
+
 Legacy compatibility:
 - `sync` remains supported as an alias for `push`.
 - Prefer `pull` and `push` in summaries, examples, and help text.
@@ -150,6 +152,56 @@ SAFE_BRANCH=sync/<current-branch>
 - Prefer reusing `SAFE_BRANCH` if it already exists locally or in the run ledger.
 - Never generate timestamp-only branch names for the same logical run unless the prior safety branch is unusable and that reason is recorded in the ledger.
 
+## Issue-Flow Context Detection
+
+After resolving the branch and remote, detect whether this checkout is an active issue-flow worktree. This is a non-blocking enrichment step — issue-flow absence is never a blocker.
+
+### Detection steps
+
+1. Check if this is a linked worktree:
+
+```bash
+COMMON_DIR=$(git rev-parse --git-common-dir)
+GIT_DIR=$(git rev-parse --git-dir)
+```
+
+If `COMMON_DIR != GIT_DIR`, set `IS_WORKTREE=true`.
+
+2. Search for a matching `.issue-flow-state.json`. Resolve the spec root in this order:
+   - `BUILD_E2E_SPEC_ROOT` environment variable (if set)
+   - `.jarvis/context/specs/` (if exists)
+   - `specs/` (if exists)
+
+   Search all subdirectories of the spec root for `.issue-flow-state.json` files. For each found file, read the JSON and check if `git.branch` matches the current branch name.
+
+3. If no state file matched but the current branch matches the pattern `<digits>_<slug>` (e.g., `113_program-team-selection`), set as a soft signal. This adjusts the target branch default to `main` but does not activate full issue-flow awareness (no issue number, no commit enrichment).
+
+4. Store the result as `ISSUE_FLOW_CONTEXT`:
+
+```text
+active: <true if state file found and matched, false otherwise>
+issue_number: <from state.issue.number, or null>
+issue_url: <from state.issue.url, or null>
+base_branch: <from state.git.base_branch, or "main" for soft signal>
+phase_id: <from state.phase.id, or null>
+phase_name: <from state.phase.name, or null>
+state_file_path: <relative path to matched state file, or null>
+is_worktree: <true if linked worktree>
+```
+
+Read only these fields from the state file: `issue.number`, `issue.url`, `git.branch`, `git.base_branch`, `phase.id`, `phase.name`. Do not depend on other fields.
+
+### Target branch override
+
+When `ISSUE_FLOW_CONTEXT.active` is true (or soft signal matched) and the user did NOT pass an explicit `--branch`:
+- Override `TARGET_BRANCH` to `ISSUE_FLOW_CONTEXT.base_branch`
+- Log: `"Issue-flow detected (#<number>, Phase <id>). Target branch: <base_branch>"`
+- For soft signal: `"Issue-flow branch pattern detected. Target branch: main"`
+
+This override applies to both `pull` and `push` flows. It ensures the issue branch rebases from and targets its actual base branch, not the integration branch — minimizing conflicts from unrelated work.
+
+The user can always override with `--branch <name>`.
+
 ## Preflight Blockers
 
 Abort before any write operation when any of the following is true:
@@ -167,6 +219,8 @@ Suggested Git checks:
 
 ```bash
 git rev-parse --show-toplevel
+git rev-parse --git-common-dir
+git rev-parse --git-dir
 git status --porcelain -uall
 git ls-files -u
 git rev-parse --git-path MERGE_HEAD
@@ -256,6 +310,10 @@ Run local-only analysis and report:
 - forbidden candidate count
 - whether the branch has an upstream
 - whether local blockers exist
+- issue-flow context status:
+  - if active: issue number, phase, base branch, target override
+  - if worktree detected but no state file: `inactive`
+  - if neither: `not_detected`
 
 Do not run `git fetch`.
 Do not create or modify the ledger.
@@ -300,7 +358,36 @@ git rebase "$TARGET_REMOTE/$TARGET_BRANCH"
 git stash pop "stash^{/$STASH_NAME}"
 ```
 
-6. On rebase conflict, run `git rebase --abort`, preserve the stash, and stop.
+6. On rebase conflict:
+   a. Check which files are in conflict:
+
+   ```bash
+   git diff --name-only --diff-filter=U
+   ```
+
+   b. If `ISSUE_FLOW_CONTEXT.active` is true and ALL conflicting files match `**/.issue-flow-state.json` (no other files in conflict):
+      - Pause and present the user with a choice:
+
+      ```text
+      Rebase conflict in .issue-flow-state.json
+
+      This is the issue-flow state file — it tracks your issue's progress.
+      The remote branch has a different version. How would you like to resolve?
+
+        1. Keep mine (recommended) — Keep your local state. Issue-flow will
+           reconcile automatically on its next run.
+        2. Accept theirs — Use the remote version. Your local progress
+           markers may need re-verification.
+        3. Abort rebase — Cancel the pull entirely. No changes made.
+      ```
+
+      - After user chooses:
+        - Option 1: `git checkout --ours <files> && git add <files> && git rebase --continue`
+        - Option 2: `git checkout --theirs <files> && git add <files> && git rebase --continue`
+        - Option 3: `git rebase --abort`, restore stash if applicable, stop
+
+   c. If ANY non-state-file is also in conflict, or if issue-flow context is not active: run `git rebase --abort`, preserve the stash, and stop with recovery guidance.
+
 7. On stash-restore conflict, keep the rebased branch intact, report conflicting files, and stop.
 
 Return a concise summary with:
@@ -406,6 +493,8 @@ Subject algorithm:
 
 Do not invent a more specific subject unless the staged-file pattern matches one of the rules above exactly.
 
+Issue reference: when `ISSUE_FLOW_CONTEXT.active` is true and `issue_number` is available, append `(#<issue_number>)` to the subject. Example: `chore(sync): update repository changes (#123)`. This creates a GitHub auto-link to the issue.
+
 Create the commit only when staged changes exist:
 
 ```bash
@@ -453,6 +542,8 @@ If no open PR exists, create one:
 ```bash
 gh pr create -R "$PR_REPO" --base "$PR_BASE" --head "$PR_HEAD" --fill
 ```
+
+When creating a new PR and `ISSUE_FLOW_CONTEXT.active` is true with `issue_number` available, append `Closes #<issue_number>` to the PR body using `--body` or by amending after `--fill`. Do not add this when reusing an existing PR.
 
 If PR creation fails, stop with `pr=creation_failed` and keep the branch pushed.
 
@@ -585,6 +676,9 @@ pr: <created|updated_existing|creation_failed|skipped_already_on_target|not_atte
 pr_loop: <inline_terminal|background_started|failed_to_start|not_started>
 pr_terminal: <merged|auto_merge_armed_and_green|closed_by_user|escalated_manual_review|retry_budget_exhausted|auth_or_permission_lost|unsafe_change_required|not_terminal>
 working_tree: <clean|dirty>
+issue_flow: <active|inactive|not_detected>
+issue_flow_issue: <#number|none>
+issue_flow_target_override: <branch|none>
 ```
 
 If the flow aborts or escalates, include:
