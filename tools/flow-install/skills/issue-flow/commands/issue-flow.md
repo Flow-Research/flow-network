@@ -266,6 +266,12 @@ When a transition rule has `pause_after=true`:
 ## Phase Rules
 
 ### Phase 0 — Intake, readiness check, and clarification recovery
+- **Dependency check**: Run the shared dependency validator before proceeding:
+  ```bash
+  bash "${AGENTS_SKILLS_ROOT}/_shared/check-dependencies.sh" \
+      --manifest "${AGENTS_SKILLS_ROOT}/issue-flow/manifest.yaml"
+  ```
+  If any required dependency is missing, report the missing tools and their install commands to the user. Ask permission before installing. If the user declines `gh` installation, warn that GitHub operations will be unavailable and set `github.gh_available` to `false` in the state file. If `gh` is present but not authenticated (`auth_ok: false` in output), instruct the user to run `! gh auth login`.
 - Load the GitHub issue and any available project metadata.
 - Detect whether a standard strategy folder exists for the repo. Prefer `.jarvis/context/docs/strategy/`; if that is unavailable, check `docs/strategy/`.
 - When a strategy folder exists, read `docs/strategy/README.md` first and then the most relevant linked strategy docs before finalizing intake classification.

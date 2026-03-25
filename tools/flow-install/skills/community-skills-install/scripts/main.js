@@ -124,35 +124,45 @@ function persistCommunityInstall(communitySkills) {
 }
 
 function cloneOrPull() {
-  console.log('\n📦 Checking community repository...\n');
-  
+  console.log('\n Checking community repository...\n');
+
   if (fs.existsSync(path.join(COMMUNITY_DIR, '.git'))) {
-    console.log('📥 Pulling latest changes...');
+    console.log(' Updating skills (shallow fetch)...');
     try {
-      execSync('git fetch origin', { cwd: COMMUNITY_DIR, stdio: 'pipe' });
+      execSync('git fetch --depth 1 origin main', { cwd: COMMUNITY_DIR, stdio: 'pipe' });
       const local = execSync('git rev-parse HEAD', { cwd: COMMUNITY_DIR, encoding: 'utf8' }).trim();
-      const remote = execSync('git rev-parse origin/main', { cwd: COMMUNITY_DIR, encoding: 'utf8' }).trim();
-      
+      const remote = execSync('git rev-parse FETCH_HEAD', { cwd: COMMUNITY_DIR, encoding: 'utf8' }).trim();
+
       if (local !== remote) {
-        execSync('git pull origin main', { cwd: COMMUNITY_DIR, stdio: 'inherit' });
-        console.log('✅ Updated community repository');
+        execSync('git checkout FETCH_HEAD -- skills/', { cwd: COMMUNITY_DIR, stdio: 'pipe' });
+        console.log(' Updated community skills');
       } else {
-        console.log('✅ Already up to date');
+        console.log(' Already up to date');
       }
       return { updated: local !== remote };
     } catch (err) {
-      console.error('❌ Failed to pull:', err.message);
+      console.error(' Failed to update:', err.message);
       return { error: err.message };
     }
   } else {
-    console.log(`📥 Cloning ${COMMUNITY_REPO}...`);
+    console.log(` Cloning community skills (shallow + sparse)...`);
     try {
-      execSync(`git clone ${COMMUNITY_REPO} "${COMMUNITY_DIR}"`, { stdio: 'inherit' });
-      console.log('✅ Cloned community repository');
+      // Shallow clone with sparse checkout — downloads only skills/ dir, no history
+      execSync(`git clone --depth 1 --filter=blob:none --sparse "${COMMUNITY_REPO}" "${COMMUNITY_DIR}"`, { stdio: 'pipe' });
+      execSync('git sparse-checkout set skills/', { cwd: COMMUNITY_DIR, stdio: 'pipe' });
+      console.log(' Cloned community repository (shallow)');
       return { cloned: true };
-    } catch (err) {
-      console.error('❌ Failed to clone:', err.message);
-      return { error: err.message };
+    } catch {
+      // Fallback to regular shallow clone if sparse checkout not supported
+      console.log(' Falling back to shallow clone...');
+      try {
+        execSync(`git clone --depth 1 "${COMMUNITY_REPO}" "${COMMUNITY_DIR}"`, { stdio: 'pipe' });
+        console.log(' Cloned community repository (shallow fallback)');
+        return { cloned: true };
+      } catch (err2) {
+        console.error(' Failed to clone:', err2.message);
+        return { error: err2.message };
+      }
     }
   }
 }

@@ -48,4 +48,4 @@ jobs:
 
       - name: Run Flow install evaluation harness
         run: |
-          bash tests/harness/run-flow-install-eval.sh
+          FLOW_EVAL_FULL_COMMUNITY=1 bash tests/harness/run-flow-install-eval.sh
