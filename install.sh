@@ -109,10 +109,8 @@ parse_args() {
 
   if [[ "$INSTALL_MODE" == "in-place" ]]; then
     TARGET_ROOT="$(cd "$TARGET_ROOT" && pwd)"
-    if [[ "$INSTALL_COMMUNITY" == "auto" ]]; then
-      INSTALL_COMMUNITY="0"
-    fi
-  elif [[ "$INSTALL_COMMUNITY" == "auto" ]]; then
+  fi
+  if [[ "$INSTALL_COMMUNITY" == "auto" ]]; then
     INSTALL_COMMUNITY="1"
   fi
 }

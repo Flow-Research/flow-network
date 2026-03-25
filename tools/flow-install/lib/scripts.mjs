@@ -353,16 +353,6 @@ const registerClaude = async () => {
     if (await pathExists(perSkillPluginDir)) await fs.rm(perSkillPluginDir, { recursive: true, force: true });
   }
 
-  // Remove ~/.claude/skills/ symlinks (superseded by marketplace plugin)
-  const claudeSkillsDir = path.join(HOME, ".claude", "skills");
-  if (await pathExists(claudeSkillsDir)) {
-    const symlinks = await fs.readdir(claudeSkillsDir).catch(() => []);
-    if (symlinks.length > 0) {
-      for (const name of symlinks) await fs.rm(path.join(claudeSkillsDir, name), { recursive: true, force: true });
-      console.log("  Removed " + symlinks.length + " stale symlinks from ~/.claude/skills/");
-    }
-  }
-
   return skills.length;
 };
 
@@ -623,16 +613,6 @@ const run = async () => {
   for (const skill of skills) {
     const perSkillPluginDir = path.join(skill.skillDir, ".claude-plugin");
     if (await pathExists(perSkillPluginDir)) await fs.rm(perSkillPluginDir, { recursive: true, force: true });
-  }
-
-  // Remove ~/.claude/skills/ symlinks (superseded by marketplace plugin)
-  const claudeSkillsDir = path.join(HOME, ".claude", "skills");
-  if (await pathExists(claudeSkillsDir)) {
-    const symlinks = await fs.readdir(claudeSkillsDir).catch(() => []);
-    if (symlinks.length > 0) {
-      for (const name of symlinks) await fs.rm(path.join(claudeSkillsDir, name), { recursive: true, force: true });
-      console.log("Removed " + symlinks.length + " stale symlinks from ~/.claude/skills/");
-    }
   }
 
   console.log("Claude Code refreshed for " + skills.length + " skill(s)");

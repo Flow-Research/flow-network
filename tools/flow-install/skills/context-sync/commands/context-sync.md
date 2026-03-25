@@ -416,18 +416,26 @@ git stash push -u -m "$STASH_NAME"
 
 ### Step 3: Sync with the current working branch remote
 
-If the push branch already exists remotely and is not protected:
+First check if the push branch exists remotely:
+
+```bash
+git ls-remote --heads "$PUSH_REMOTE" "$PUSH_BRANCH"
+```
+
+If the push branch exists remotely and is not protected:
 
 ```bash
 git pull --rebase "$PUSH_REMOTE" "$PUSH_BRANCH"
 ```
 
-If the push branch does not exist remotely, skip this step and continue.
+If the push branch does not exist remotely (e.g., it was deleted after a PR merge), skip this step entirely and continue. The branch will be created fresh on push with `-u`.
 
 If the branch-sync step conflicts:
 - run `git rebase --abort`
-- preserve the stash if one exists
+- **immediately restore the stash** if one was created (do not leave changes stuck in stash)
 - stop before staging or pushing
+
+**Safety rule**: Steps 2 (stash), 3 (sync), and 4 (restore) must each be executed as separate operations. Never chain them in a single command — if sync fails after stashing, the stash must be restored before reporting the error.
 
 ### Step 4: Restore the stash if one was created
 
