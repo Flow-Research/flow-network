@@ -10,3 +10,21 @@ data_categories: [none]
 egress: [api.github.com, github.com]
 invoke: /issue-flow
 location: tools/flow-install/skills/issue-flow
+dependencies:
+  - tool: gh
+    description: "GitHub CLI for issue operations"
+    check: "gh --version"
+    install:
+      darwin: "brew install gh"
+      linux: "sudo apt install gh || conda install gh --channel conda-forge"
+      fallback: "https://cli.github.com/"
+    auth_check: "gh auth status"
+    required: true
+  - tool: git
+    description: "Git version control"
+    check: "git --version"
+    required: true
+  - tool: python3
+    description: "Python 3 for state and worktree scripts"
+    check: "python3 --version"
+    required: true

@@ -11,3 +11,16 @@ data_categories: [none]
 egress: [none]
 invoke: "/tmux-agent-launcher"
 location: tools/flow-install/skills/tmux-agent-launcher
+dependencies:
+  - tool: tmux
+    description: "Terminal multiplexer for session management"
+    check: "tmux -V"
+    install:
+      darwin: "brew install tmux"
+      linux: "sudo apt install tmux"
+      fallback: "https://github.com/tmux/tmux"
+    required: true
+  - tool: python3
+    description: "Python 3 for path resolution and JSON encoding"
+    check: "python3 --version"
+    required: true

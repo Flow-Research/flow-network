@@ -10,3 +10,12 @@ data_categories: [none]
 egress: [github.com]
 invoke: "/install-skills"
 location: tools/flow-install/skills/community-skills-install
+dependencies:
+  - tool: git
+    description: "Git for cloning community skill repos"
+    check: "git --version"
+    required: true
+  - tool: node
+    description: "Node.js for running install scripts"
+    check: "node --version"
+    required: true

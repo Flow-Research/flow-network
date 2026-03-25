@@ -644,16 +644,40 @@ gh pr merge -R "$PR_REPO" <number> --squash
 
 Only use one merge command that matches the repository policy and current PR state.
 
-### Durable Background Task
+### Step 10: Start the PR resolution loop
 
-If the PR is not immediately terminal, start a durable background task that keeps the loop active.
+After Step 9 (PR created or reused), the push flow MUST start the PR resolution loop. This is not optional.
 
-Preferred implementation:
-- use `Task`
-- point it at the same branch, PR number, ledger path, and retry budget
-- record the background task id in the ledger and final summary
+1. **Inline check**: Run one immediate PR state check:
+   ```bash
+   gh pr view -R "$PR_REPO" <number> --json state,mergeStateStatus,reviewDecision,statusCheckRollup,isDraft
+   ```
 
-The summary must clearly say whether responsibility was transferred to the background loop.
+2. **If immediately terminal** (checks passed, ready to merge): merge inline and record `pr_loop=inline_terminal`.
+
+3. **If not immediately terminal** (CI running, waiting for review): launch a background agent to monitor the PR:
+   - Use the `Agent` tool with `run_in_background: true`
+   - The background agent polls `gh pr view` every 30 seconds
+   - It classifies blockers and acts per the Loop Contract above
+   - It auto-merges with `gh pr merge --squash` when checks pass
+   - It fixes mechanical CI failures (lint, test) up to the retry budget
+   - It escalates non-mechanical issues (review feedback, conflicts)
+   - Record `pr_loop=background_started` in the summary
+
+4. **If the background agent cannot be started**: record `pr_loop=failed_to_start` and escalate. Never leave a PR unattended.
+
+The background agent prompt must include:
+- Repository slug (`PR_REPO`)
+- PR number
+- Branch name
+- Working directory
+- Retry budget (MAX_AUTONOMOUS_ATTEMPTS=5, MAX_REPEATED_BLOCKER_ATTEMPTS=3)
+- The full loop contract (terminal states, blocker classification, merge strategy)
+
+The final summary must clearly state whether:
+- The PR was merged inline (`pr_loop=inline_terminal`)
+- A background agent is monitoring (`pr_loop=background_started`)
+- The loop could not start (`pr_loop=failed_to_start`)
 
 ## Evaluation Contract
 

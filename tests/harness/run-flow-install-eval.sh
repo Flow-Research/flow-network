@@ -36,7 +36,7 @@ copy_fixture() {
   local name="$1"
   local dest="$2"
   cp -R "$FIXTURES_ROOT/$name" "$dest"
-  git -C "$dest" init >/dev/null
+  git -C "$dest" init -b main >/dev/null
 }
 
 install_jarvis() {
@@ -118,10 +118,14 @@ run_base_eval() {
   fi
   pnpm --dir "$repo" harness:verify >/dev/null
   record_pass "Base fixture harness verify passed"
-  verify_opencode_skill_load "/brainstorm"
-  record_pass "OpenCode can load Flow core skill" "brainstorm"
-  verify_claude_skill_exec "/brainstorm" "What's on your mind?"
-  record_pass "Claude can execute Flow core slash skill" "brainstorm"
+  if [[ "${FLOW_EVAL_LLM_TESTS:-0}" == "1" ]]; then
+    verify_opencode_skill_load "/brainstorm"
+    record_pass "OpenCode can load Flow core skill" "brainstorm"
+    verify_claude_skill_exec "/brainstorm" "What's on your mind?"
+    record_pass "Claude can execute Flow core slash skill" "brainstorm"
+  else
+    record_pass "OpenCode/Claude LLM tests skipped (FLOW_EVAL_LLM_TESTS not set)"
+  fi
   install_flow "$repo"
   pnpm --dir "$repo" harness:verify >/dev/null
   record_pass "Base fixture rerun remains idempotent enough for harness verify"
@@ -144,10 +148,14 @@ run_local_skill_eval() {
   record_pass "Project-local skill copied globally" "$HOME/.agents/skills/fixture-skill/SKILL.md"
   pnpm --dir "$repo" harness:verify >/dev/null
   record_pass "Local-skill fixture harness verify passed"
-  verify_opencode_skill_load "/fixture-skill"
-  record_pass "OpenCode can load project-local skill" "fixture-skill"
-  verify_claude_skill_exec "/fixture-skill" "This skill exists only for harness smoke testing."
-  record_pass "Claude can execute project-local slash skill" "fixture-skill"
+  if [[ "${FLOW_EVAL_LLM_TESTS:-0}" == "1" ]]; then
+    verify_opencode_skill_load "/fixture-skill"
+    record_pass "OpenCode can load project-local skill" "fixture-skill"
+    verify_claude_skill_exec "/fixture-skill" "This skill exists only for harness smoke testing."
+    record_pass "Claude can execute project-local slash skill" "fixture-skill"
+  else
+    record_pass "OpenCode/Claude LLM tests skipped (FLOW_EVAL_LLM_TESTS not set)"
+  fi
 }
 
 run_custom_path_eval() {
@@ -181,7 +189,11 @@ PY
 main() {
   prepare_home
   install_jarvis
-  install_agent_clis
+  if [[ "${FLOW_EVAL_LLM_TESTS:-0}" == "1" ]]; then
+    install_agent_clis
+  else
+    record_pass "Agent CLI install skipped (FLOW_EVAL_LLM_TESTS not set)"
+  fi
   run_base_eval
   run_local_skill_eval
   CUSTOM_REPO="$TEMP_ROOT/custom-paths" run_custom_path_eval

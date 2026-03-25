@@ -10,3 +10,17 @@ data_categories: [credentials]
 egress: [github.com, api.github.com]
 invoke: "/context-sync"
 location: tools/flow-install/skills/context-sync
+dependencies:
+  - tool: gh
+    description: "GitHub CLI for PR operations"
+    check: "gh --version"
+    install:
+      darwin: "brew install gh"
+      linux: "sudo apt install gh || conda install gh --channel conda-forge"
+      fallback: "https://cli.github.com/"
+    auth_check: "gh auth status"
+    required: true
+  - tool: git
+    description: "Git version control"
+    check: "git --version"
+    required: true
