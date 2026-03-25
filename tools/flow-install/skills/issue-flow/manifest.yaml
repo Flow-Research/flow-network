@@ -1,6 +1,6 @@
 name: issue-flow
 type: opencode
-version: 0.3.0
+version: 0.3.1
 owner: julian
 status: experimental
 blast_radius: high

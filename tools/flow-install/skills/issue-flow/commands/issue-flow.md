@@ -260,7 +260,8 @@ Phase 15 — Closeout and GitHub sync
 - Resolve all blocking review issues.
 - Human approval should confirm both delivery clarity and strategic fit for product- or workflow-shaping issues.
 - Stop for human approval before tech spec starts.
-- Update the state file with PRD review artifacts, `spec_gate` status, human approval status, and `next_action`.
+- After the user approves `prd_approval`, execute the **Artifact Commit-and-Link** procedure for `product_spec.md` (artifact_key=`product_spec`, artifact_label="Product Spec (PRD)").
+- Update the state file with PRD review artifacts, `spec_gate` status, human approval status, artifact commit-and-link results, and `next_action`.
 
 ### Phase 4 — Tech spec
 - Invoke `tech-spec`.
@@ -273,7 +274,8 @@ Phase 15 — Closeout and GitHub sync
 - Require the review to include simplicity and architectural fitness as a blocking concern during design review.
 - Block advancement if the design is over-engineered, unjustifiably abstract, or poorly aligned with repo architecture.
 - Stop for human approval before implementation begins.
-- Update the state file with tech-spec review artifacts, `design_simplicity_gate`, human approval status, and `next_action`.
+- After the user approves `tech_spec_approval`, execute the **Artifact Commit-and-Link** procedure for `technical_spec.md` (artifact_key=`technical_spec`, artifact_label="Technical Spec").
+- Update the state file with tech-spec review artifacts, `design_simplicity_gate`, human approval status, artifact commit-and-link results, and `next_action`.
 
 ### Phase 6 — Execution scope confirmation
 - Confirm the smallest valid implementation slice.
@@ -292,7 +294,8 @@ Phase 15 — Closeout and GitHub sync
 ### Phase 8 — Regression scenario generation
 - Invoke `spec-to-regression`.
 - Ensure every relevant criterion maps to browser/API regression scenarios.
-- Update the state file with regression artifact paths and `regression_coverage_gate` status.
+- After generation completes, execute the **Artifact Commit-and-Link** procedure for the regression spec (artifact_key=`regression_spec`, artifact_label="Regression Spec").
+- Update the state file with regression artifact paths, `regression_coverage_gate` status, and artifact commit-and-link results.
 
 ### Phase 9 — Test code generation
 - Invoke `api-integration-codegen` and `browser-integration-codegen`.
@@ -368,6 +371,74 @@ Also stop for human input when:
 - destructive or production-impacting actions are required
 - security or billing posture changes are involved
 - conflicting review directions cannot both be satisfied
+
+## Artifact Commit-and-Link Procedure
+
+A reusable procedure for committing an approved artifact to the issue branch and posting a link on the GitHub issue. Execute this procedure whenever a phase above calls for it.
+
+### Inputs
+
+| Input | Description |
+|---|---|
+| `artifact_key` | The key in `artifacts.*` (e.g., `product_spec`, `technical_spec`, `regression_spec`) |
+| `artifact_label` | Human-readable name (e.g., "Product Spec (PRD)", "Technical Spec", "Regression Spec") |
+| `artifact_path` | Relative path from worktree root to the file (from `artifacts.<artifact_key>`) |
+
+### Steps
+
+1. **Ask the user**: "Would you like to commit the `<artifact_label>` and post a link on the GitHub issue?"
+
+2. **If the user declines**: set `artifact_commits.<artifact_key>.skipped` to `true`, append a history event with `event: "artifact_commit_skipped"`, and proceed to the next phase.
+
+3. **If the user accepts**:
+
+   a. **Stage the artifact**:
+   ```bash
+   git add <artifact_path>
+   ```
+
+   b. **Commit** with the message:
+   ```
+   docs(<epic-slug>): add approved <artifact_label>
+
+   Approved <artifact_label> for #<issue_number>.
+   ```
+
+   c. **Push** to the remote branch:
+   ```bash
+   git push origin <branch>
+   ```
+
+   d. **Construct the file URL**:
+   ```bash
+   REPO_URL=$(gh repo view --json url -q '.url')
+   FILE_URL="${REPO_URL}/blob/<branch>/<artifact_path>"
+   ```
+
+   e. **Post a GitHub comment**:
+   ```bash
+   gh issue comment <issue_number> --body "**<artifact_label> committed** — [View on branch \`<branch>\`](<FILE_URL>)"
+   ```
+
+   f. **Update state** by merging into `artifact_commits.<artifact_key>`:
+   ```json
+   {
+     "committed": true,
+     "commit_sha": "<sha>",
+     "pushed": true,
+     "github_comment_posted": true,
+     "skipped": false,
+     "timestamp": "<ISO 8601>"
+   }
+   ```
+
+   g. **Append a history event** with `event: "artifact_committed_and_linked"`.
+
+### Failure Handling
+
+- If the commit or push fails, report the error to the user and do not post the GitHub comment. Record `error` in `artifact_commits.<artifact_key>`.
+- If the GitHub comment fails, record the commit SHA in state anyway and note the comment failure. The artifact is still committed; the link can be posted manually.
+- Never block phase advancement on a comment-posting failure. The commit is the important part.
 
 ## Output Contract
 
