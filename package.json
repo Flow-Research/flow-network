@@ -11,7 +11,8 @@
     "harness:eval": "bash tests/harness/run-flow-install-eval.sh",
     "harness:eval:remote": "bash tests/harness/run-remote-install-docker.sh",
     "postinstall": "node scripts/flow/sync-rules.mjs",
-    "flow:cleanup": "node scripts/flow/cleanup-stale-plugins.mjs"
+    "flow:cleanup": "node scripts/flow/cleanup-stale-plugins.mjs",
+    "flow:sync": "bash ${HOME}/.cache/flow-harness/install.sh --in-place || node ${HOME}/.cache/flow-harness/tools/flow-install/index.mjs --yes"
   },
   "packageManager": "pnpm@9.15.4+sha512.b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0"
 }

@@ -40,4 +40,4 @@ This repo is Flow-managed. Use this file as the canonical Flow agent protocol fo
 - Never commit `.env` files; use `.env.example`
 - Personal context belongs in `.jarvis/context/private/<username>/`
 - Keep debt tracked in the debt registers, not only in chat or TODO comments
-<!-- flow-context:end -->>>>>
+<!-- flow-context:end -->>>>>>
