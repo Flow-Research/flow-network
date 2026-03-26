@@ -108,6 +108,7 @@ export const patchPackageJson = async (projectRoot, { dryRun = false, scriptsDir
     "skills:register": `node ${scriptsDirRef}/register-skills.mjs`,
     "skills:register:claude": `node ${scriptsDirRef}/register-claude-skills.mjs`,
     "flow:cleanup": `node ${scriptsDirRef}/cleanup-stale-plugins.mjs`,
+    "flow:sync": "bash ${HOME}/.cache/flow-harness/install.sh --in-place || node ${HOME}/.cache/flow-harness/tools/flow-install/index.mjs --yes",
     "harness:verify": `node ${scriptsDirRef}/verify-harness.mjs`,
     "postinstall": `node ${scriptsDirRef}/sync-rules.mjs`,
   };

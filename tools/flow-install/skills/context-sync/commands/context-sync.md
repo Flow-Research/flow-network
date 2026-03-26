@@ -36,6 +36,7 @@ These rules are mandatory.
 7. Never silently discard local changes. If a stash is created, report it and either restore it or stop with recovery guidance.
 8. Never leave a failed PR unattended after `push`. Either the autonomous PR-resolution loop starts successfully, or the command ends in an explicit safe escalation state.
 9. Never claim success without fresh verification evidence.
+10. Never merge a PR. The push flow ensures the PR is green and ready, then stops. Merging is always the user's action.
 
 ## Mode Semantics
 
@@ -204,6 +205,15 @@ The user can always override with `--branch <name>`.
 
 ## Preflight Blockers
 
+Before checking blockers, run the shared dependency validator:
+
+```bash
+bash "${AGENTS_SKILLS_ROOT}/_shared/check-dependencies.sh" \
+    --manifest "${AGENTS_SKILLS_ROOT}/context-sync/manifest.yaml"
+```
+
+If any required dependency is missing (e.g., `gh`, `git`), report the missing tools with their platform-specific install commands and ask the user's permission to install. If `gh` is missing and the user declines, warn that PR operations will be unavailable but allow `pull` and `status` to proceed.
+
 Abort before any write operation when any of the following is true:
 - not a git repository
 - detached HEAD
@@ -211,7 +221,7 @@ Abort before any write operation when any of the following is true:
 - missing target branch for `pull`
 - ongoing merge, rebase, cherry-pick, revert, or bisect
 - unmerged entries in the index
-- missing `gh` CLI for `push`
+- missing `gh` CLI for `push` (after dependency check offered installation)
 - missing GitHub authentication for PR operations in `push`
 - missing local verification tooling required by the configured verification profile
 
@@ -564,8 +574,7 @@ This loop may run inline if resolution is immediate, or as a durable background 
 ### Loop Contract
 
 The loop owns the branch and PR until one of these terminal states occurs:
-- `merged`
-- `auto_merge_armed_and_green`
+- `ready_to_merge`
 - `closed_by_user`
 - `escalated_manual_review`
 - `retry_budget_exhausted`
@@ -628,21 +637,8 @@ gh pr view -R "$PR_REPO" <number> --json number,url,state,mergeStateStatus,revie
 - `waiting_for_review`: keep watching until review changes state or an SLA threshold is hit; do not spam commits
 - `requested_changes_ambiguous`: escalate safely
 - `merge_conflict`: attempt a safe rebase only if the conflict is absent; otherwise escalate
-- `ready_to_merge`: merge or arm auto-merge if allowed
+- `ready_to_merge`: report that the PR is green and ready to merge. Do NOT merge — stop the loop and report to the user. Merging is always the user's action.
 - `closed`: stop and mark `closed_by_user`
-
-4. Merge path:
-- prefer enabling auto-merge when the repository supports it and all required checks are green
-- otherwise merge only when branch protection requirements are satisfied
-
-Suggested commands:
-
-```bash
-gh pr merge -R "$PR_REPO" <number> --auto --squash
-gh pr merge -R "$PR_REPO" <number> --squash
-```
-
-Only use one merge command that matches the repository policy and current PR state.
 
 ### Step 10: Start the PR resolution loop
 
@@ -653,15 +649,15 @@ After Step 9 (PR created or reused), the push flow MUST start the PR resolution 
    gh pr view -R "$PR_REPO" <number> --json state,mergeStateStatus,reviewDecision,statusCheckRollup,isDraft
    ```
 
-2. **If immediately terminal** (checks passed, ready to merge): merge inline and record `pr_loop=inline_terminal`.
+2. **If immediately ready** (all checks passed, no review blockers): record `pr_loop=ready_to_merge` and report to user. Do NOT merge.
 
-3. **If not immediately terminal** (CI running, waiting for review): launch a background agent to monitor the PR:
+3. **If not immediately ready** (CI running, waiting for review): launch a background agent to monitor the PR:
    - Use the `Agent` tool with `run_in_background: true`
    - The background agent polls `gh pr view` every 30 seconds
    - It classifies blockers and acts per the Loop Contract above
-   - It auto-merges with `gh pr merge --squash` when checks pass
    - It fixes mechanical CI failures (lint, test) up to the retry budget
    - It escalates non-mechanical issues (review feedback, conflicts)
+   - When CI passes and PR is ready: report `ready_to_merge` and stop. Do NOT merge.
    - Record `pr_loop=background_started` in the summary
 
 4. **If the background agent cannot be started**: record `pr_loop=failed_to_start` and escalate. Never leave a PR unattended.
@@ -672,10 +668,11 @@ The background agent prompt must include:
 - Branch name
 - Working directory
 - Retry budget (MAX_AUTONOMOUS_ATTEMPTS=5, MAX_REPEATED_BLOCKER_ATTEMPTS=3)
-- The full loop contract (terminal states, blocker classification, merge strategy)
+- The full loop contract (terminal states, blocker classification)
+- Explicit instruction: NEVER merge the PR. Report ready_to_merge and stop.
 
 The final summary must clearly state whether:
-- The PR was merged inline (`pr_loop=inline_terminal`)
+- The PR is ready to merge (`pr_loop=ready_to_merge`)
 - A background agent is monitoring (`pr_loop=background_started`)
 - The loop could not start (`pr_loop=failed_to_start`)
 
@@ -705,8 +702,8 @@ ledger: <created|resumed|none>
 commit: <created|none>
 push: <completed|skipped>
 pr: <created|updated_existing|creation_failed|skipped_already_on_target|not_attempted>
-pr_loop: <inline_terminal|background_started|failed_to_start|not_started>
-pr_terminal: <merged|auto_merge_armed_and_green|closed_by_user|escalated_manual_review|retry_budget_exhausted|auth_or_permission_lost|unsafe_change_required|not_terminal>
+pr_loop: <ready_to_merge|background_started|failed_to_start|not_started>
+pr_terminal: <ready_to_merge|closed_by_user|escalated_manual_review|retry_budget_exhausted|auth_or_permission_lost|unsafe_change_required|not_terminal>
 working_tree: <clean|dirty>
 issue_flow: <active|inactive|not_detected>
 issue_flow_issue: <#number|none>
