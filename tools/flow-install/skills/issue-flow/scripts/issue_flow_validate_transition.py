@@ -30,105 +30,119 @@ class TransitionRule:
 
 
 TRANSITION_TABLE: Dict[Tuple[int, int], TransitionRule] = {
-    (0, 1): TransitionRule(
+    (0, 1): TransitionRule(  # Intake -> Brainstorm
         quality_gates=["issue_readiness_check"],
         human_gates=[],
         artifact_commits=[],
         pause_after=False,
         explicit_trigger=None,
     ),
-    (1, 2): TransitionRule(
+    (1, 2): TransitionRule(  # Brainstorm -> PRD
         quality_gates=["brainstorm_discovery_gate"],
         human_gates=["brainstorm_approval"],
         artifact_commits=[],
         pause_after=False,
         explicit_trigger=None,
     ),
-    (2, 3): TransitionRule(
+    (2, 3): TransitionRule(  # PRD -> PRD review
         quality_gates=[],
         human_gates=[],
         artifact_commits=[],
         pause_after=False,
         explicit_trigger=None,
     ),
-    (3, 4): TransitionRule(
+    (3, 4): TransitionRule(  # PRD review -> Design spec
         quality_gates=["spec_gate"],
         human_gates=["prd_approval"],
         artifact_commits=["product_spec"],
         pause_after=True,
-        explicit_trigger="User explicitly says to start tech spec",
+        explicit_trigger="User explicitly says to start design spec",
     ),
-    (4, 5): TransitionRule(
+    (4, 5): TransitionRule(  # Design spec -> Design review
         quality_gates=[],
         human_gates=[],
         artifact_commits=[],
         pause_after=False,
         explicit_trigger=None,
     ),
-    (5, 6): TransitionRule(
+    (5, 6): TransitionRule(  # Design review -> Tech spec
+        quality_gates=["design_completeness_gate"],
+        human_gates=["design_approval"],
+        artifact_commits=["design_spec"],
+        pause_after=True,
+        explicit_trigger="User explicitly says to start tech spec",
+    ),
+    (6, 7): TransitionRule(  # Tech spec -> Tech spec review
+        quality_gates=[],
+        human_gates=[],
+        artifact_commits=[],
+        pause_after=False,
+        explicit_trigger=None,
+    ),
+    (7, 8): TransitionRule(  # Tech spec review -> Execution scope
         quality_gates=["design_simplicity_gate"],
         human_gates=["tech_spec_approval"],
         artifact_commits=["technical_spec"],
         pause_after=True,
         explicit_trigger="User explicitly says to start implementation planning",
     ),
-    (6, 7): TransitionRule(
+    (8, 9): TransitionRule(  # Execution scope -> Implementation
         quality_gates=[],
         human_gates=["execution_scope_approval"],
         artifact_commits=[],
         pause_after=False,
         explicit_trigger=None,
     ),
-    (7, 8): TransitionRule(
+    (9, 10): TransitionRule(  # Implementation -> Regression
         quality_gates=[],
         human_gates=[],
         artifact_commits=[],
         pause_after=False,
         explicit_trigger=None,
     ),
-    (8, 9): TransitionRule(
+    (10, 11): TransitionRule(  # Regression -> Test code gen
         quality_gates=["regression_coverage_gate"],
         human_gates=[],
         artifact_commits=["regression_spec"],
         pause_after=False,
         explicit_trigger=None,
     ),
-    (9, 10): TransitionRule(
+    (11, 12): TransitionRule(  # Test code gen -> Test quality
         quality_gates=["generated_test_gate"],
         human_gates=[],
         artifact_commits=[],
         pause_after=False,
         explicit_trigger=None,
     ),
-    (10, 11): TransitionRule(
+    (12, 13): TransitionRule(  # Test quality -> QA
         quality_gates=["test_quality_gate"],
         human_gates=[],
         artifact_commits=[],
         pause_after=False,
         explicit_trigger=None,
     ),
-    (11, 12): TransitionRule(
+    (13, 14): TransitionRule(  # QA -> Simplicity review
         quality_gates=["qa_execution_gate"],
         human_gates=[],
         artifact_commits=[],
         pause_after=False,
         explicit_trigger=None,
     ),
-    (12, 13): TransitionRule(
+    (14, 15): TransitionRule(  # Simplicity -> PR
         quality_gates=["implementation_simplicity_gate"],
         human_gates=[],
         artifact_commits=[],
         pause_after=False,
         explicit_trigger=None,
     ),
-    (13, 14): TransitionRule(
+    (15, 16): TransitionRule(  # PR -> Final verification
         quality_gates=[],
         human_gates=[],
         artifact_commits=[],
         pause_after=False,
         explicit_trigger=None,
     ),
-    (14, 15): TransitionRule(
+    (16, 17): TransitionRule(  # Final verification -> Closeout
         quality_gates=["final_verification_gate"],
         human_gates=["final_acceptance"],
         artifact_commits=[],

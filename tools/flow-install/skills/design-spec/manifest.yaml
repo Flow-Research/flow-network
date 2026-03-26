@@ -1,0 +1,12 @@
+name: design-spec
+type: opencode
+version: 0.1.0
+owner: julian
+status: experimental
+blast_radius: medium
+description: "Generate comprehensive UX/design specifications with user flows, component specs, interaction patterns, and accessibility requirements from product specs."
+permissions: [write]
+data_categories: [none]
+egress: []
+invoke: "/design-spec"
+location: tools/flow-install/skills/design-spec

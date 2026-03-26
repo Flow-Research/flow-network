@@ -1,0 +1,12 @@
+name: design-spec-review
+type: opencode
+version: 0.1.0
+owner: julian
+status: experimental
+blast_radius: medium
+description: "Multi-perspective UX/design review for design_spec.md with 5 expert lenses."
+permissions: [write]
+data_categories: [none]
+egress: []
+invoke: "/design-spec-review"
+location: tools/flow-install/skills/design-spec-review
