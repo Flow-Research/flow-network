@@ -16,6 +16,7 @@ QUALITY_GATES = {
     "issue_clarification_recovery_gate": "pending",
     "brainstorm_discovery_gate": "pending",
     "spec_gate": "pending",
+    "design_completeness_gate": "pending",
     "design_simplicity_gate": "pending",
     "regression_coverage_gate": "pending",
     "generated_test_gate": "pending",
@@ -30,6 +31,7 @@ HUMAN_GATES = {
     "brainstorm_approval": "pending",
     "issue_append_approval": "pending",
     "prd_approval": "pending",
+    "design_approval": "pending",
     "tech_spec_approval": "pending",
     "execution_scope_approval": "pending",
     "final_acceptance": "pending",
@@ -43,7 +45,7 @@ def now_iso() -> str:
 def default_state(spec_root: str, epic_name: str, epic_path: str) -> Dict[str, Any]:
     timestamp = now_iso()
     return {
-        "version": 3,
+        "version": 4,
         "updated_at": timestamp,
         "issue": {
             "number": None,
@@ -88,6 +90,8 @@ def default_state(spec_root: str, epic_name: str, epic_path: str) -> Dict[str, A
             "issue_body_draft": None,
             "product_spec": None,
             "prd_review_summary": None,
+            "design_spec": None,
+            "design_review_summary": None,
             "technical_spec": None,
             "techspec_review_summary": None,
             "regression_spec": None,
@@ -100,6 +104,7 @@ def default_state(spec_root: str, epic_name: str, epic_path: str) -> Dict[str, A
         },
         "artifact_commits": {
             "product_spec": {"committed": False, "skipped": False},
+            "design_spec": {"committed": False, "skipped": False},
             "technical_spec": {"committed": False, "skipped": False},
             "regression_spec": {"committed": False, "skipped": False},
         },

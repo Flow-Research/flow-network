@@ -177,6 +177,8 @@ Deliver quality against the issue's acceptance criteria and approved specs.
 - `brainstorm`
 - `prd`
 - `prd-spec-review`
+- `design-spec`
+- `design-spec-review`
 - `tech-spec`
 - `tech-spec-review`
 - `engineer`
@@ -194,18 +196,20 @@ Phase 0 — Intake, readiness check, and clarification recovery
 Phase 1 — Brainstorm
 Phase 2 — PRD
 Phase 3 — PRD review
-Phase 4 — Tech spec
-Phase 5 — Tech spec review
-Phase 6 — Execution scope confirmation
-Phase 7 — Implementation
-Phase 8 — Regression scenario generation
-Phase 9 — Test code generation
-Phase 10 — Test quality validation
-Phase 11 — QA execution
-Phase 12 — Simplicity and architecture review
-Phase 13 — PR creation and CI resolution
-Phase 14 — Final verification and acceptance
-Phase 15 — Closeout and GitHub sync
+Phase 4 — Design specification
+Phase 5 — Design review
+Phase 6 — Tech spec
+Phase 7 — Tech spec review
+Phase 8 — Execution scope confirmation
+Phase 9 — Implementation
+Phase 10 — Regression scenario generation
+Phase 11 — Test code generation
+Phase 12 — Test quality validation
+Phase 13 — QA execution
+Phase 14 — Simplicity and architecture review
+Phase 15 — PR creation and CI resolution
+Phase 16 — Final verification and acceptance
+Phase 17 — Closeout and GitHub sync
 
 ## Phase Transition Validation
 
@@ -228,18 +232,20 @@ If the command exits non-zero, the transition is BLOCKED. Read the JSON output f
 | 0 | 1 | issue_readiness_check | — | — | No |
 | 1 | 2 | brainstorm_discovery_gate | brainstorm_approval | — | No |
 | 2 | 3 | — | — | — | No |
-| **3** | **4** | **spec_gate** | **prd_approval** | **product_spec** | **YES — "start tech spec"** |
+| **3** | **4** | **spec_gate** | **prd_approval** | **product_spec** | **YES — "start design spec"** |
 | 4 | 5 | — | — | — | No |
-| **5** | **6** | **design_simplicity_gate** | **tech_spec_approval** | **technical_spec** | **YES — "start implementation"** |
-| 6 | 7 | — | execution_scope_approval | — | No |
-| 7 | 8 | — | — | — | No |
-| 8 | 9 | regression_coverage_gate | — | regression_spec | No |
-| 9 | 10 | generated_test_gate | — | — | No |
-| 10 | 11 | test_quality_gate | — | — | No |
-| 11 | 12 | qa_execution_gate | — | — | No |
-| 12 | 13 | implementation_simplicity_gate | — | — | No |
-| 13 | 14 | — | — | — | No |
-| **14** | **15** | **final_verification_gate** | **final_acceptance** | — | **YES — "close out"** |
+| **5** | **6** | **design_completeness_gate** | **design_approval** | **design_spec** | **YES — "start tech spec"** |
+| 6 | 7 | — | — | — | No |
+| **7** | **8** | **design_simplicity_gate** | **tech_spec_approval** | **technical_spec** | **YES — "start implementation"** |
+| 8 | 9 | — | execution_scope_approval | — | No |
+| 9 | 10 | — | — | — | No |
+| 10 | 11 | regression_coverage_gate | — | regression_spec | No |
+| 11 | 12 | generated_test_gate | — | — | No |
+| 12 | 13 | test_quality_gate | — | — | No |
+| 13 | 14 | qa_execution_gate | — | — | No |
+| 14 | 15 | implementation_simplicity_gate | — | — | No |
+| 15 | 16 | — | — | — | No |
+| **16** | **17** | **final_verification_gate** | **final_acceptance** | — | **YES — "close out"** |
 
 ### Pause Protocol
 
@@ -321,18 +327,34 @@ When a transition rule has `pause_after=true`:
 - Invoke `prd-spec-review`.
 - Resolve all blocking review issues.
 - Human approval should confirm both delivery clarity and strategic fit for product- or workflow-shaping issues.
-- Stop for human approval before tech spec starts.
+- Stop for human approval before design spec starts.
 - After the user approves `prd_approval`, execute the **Artifact Commit-and-Link** procedure for `product_spec.md` (artifact_key=`product_spec`, artifact_label="Product Spec (PRD)").
-- After artifact commit-and-link completes, run the **Pause Protocol**: set `phase.status` to `paused_awaiting_instruction` with `next_action` = "Await explicit user instruction to start tech spec." Report the pause and stop. Do NOT proceed to Phase 4 until the user explicitly says to start tech spec.
+- After artifact commit-and-link completes, run the **Pause Protocol**: set `phase.status` to `paused_awaiting_instruction` with `next_action` = "Await explicit user instruction to start design spec." Report the pause and stop. Do NOT proceed to Phase 4 until the user explicitly says to start design spec.
 - Update the state file with PRD review artifacts, `spec_gate` status, human approval status, artifact commit-and-link results, and `next_action`.
 
-### Phase 4 — Tech spec
+### Phase 4 — Design specification
+- Invoke `design-spec`.
+- Read `product_spec.md` as primary input. Carry forward personas, user flows, and UI requirements from the PRD.
+- Produce `design_spec.md` with Mermaid user flow diagrams, screen inventory, component specifications, interaction patterns, accessibility requirements, responsive behavior, and placeholder sections for Figma/screenshot links.
+- Update the state file with the design spec artifact path and phase progress.
+
+### Phase 5 — Design review
+- Invoke `design-spec-review`.
+- Review through 5 expert lenses: UX researcher, interaction designer, accessibility expert, visual/brand designer, frontend engineer.
+- Block advancement if critical user flows are missing, accessibility requirements are incomplete, or component specs are not implementable.
+- Stop for human approval before tech spec starts.
+- After the user approves `design_approval`, execute the **Artifact Commit-and-Link** procedure for `design_spec.md` (artifact_key=`design_spec`, artifact_label="Design Spec").
+- After artifact commit-and-link completes, run the **Pause Protocol**: set `phase.status` to `paused_awaiting_instruction` with `next_action` = "Await explicit user instruction to start tech spec." Report the pause and stop. Do NOT proceed to Phase 6 until the user explicitly says to start tech spec.
+- Update the state file with design review artifacts, `design_completeness_gate` status, human approval status, artifact commit-and-link results, and `next_action`.
+
+### Phase 6 — Tech spec
 - Invoke `tech-spec`.
+- Require `design_spec.md` as mandatory input (not optional). If missing, stop with error: "Run /design-spec first."
 - Produce `technical_spec.md` that is minimal, coherent, and repo-fit.
 - Preserve only the strategy-derived constraints that materially affect architecture, sequencing, or implementation boundaries.
 - Update the state file with the tech spec artifact path and phase progress.
 
-### Phase 5 — Tech spec review
+### Phase 7 — Tech spec review
 - Invoke `tech-spec-review`.
 - Require the review to include simplicity and architectural fitness as a blocking concern during design review.
 - Block advancement if the design is over-engineered, unjustifiably abstract, or poorly aligned with repo architecture.
@@ -341,60 +363,60 @@ When a transition rule has `pause_after=true`:
 - After artifact commit-and-link completes, run the **Pause Protocol**: set `phase.status` to `paused_awaiting_instruction` with `next_action` = "Await explicit user instruction to start implementation planning." Report the pause and stop. Do NOT proceed to Phase 6 until the user explicitly says to start.
 - Update the state file with tech-spec review artifacts, `design_simplicity_gate`, human approval status, artifact commit-and-link results, and `next_action`.
 
-### Phase 6 — Execution scope confirmation
+### Phase 8 — Execution scope confirmation
 - Confirm the smallest valid implementation slice.
 - Record any intentional deferrals as technical debt.
 - Stop for human approval before coding starts.
 - If this issue is a legacy run without `git.*` metadata, derive the branch/worktree metadata now and migrate execution into the canonical sibling worktree before Phase 7 starts.
 - Update the state file with blockers, scope notes, debt links, execution-scope approval status, and `next_action`.
 
-### Phase 7 — Implementation
+### Phase 9 — Implementation
 - Invoke `engineer`.
 - Run implementation from the resolved issue worktree, not the user's unrelated checkout.
 - Implement only the approved scope.
 - Maintain evidence that maps implementation work to acceptance criteria.
 - Update the state file with implementation evidence pointers and relevant git/GitHub references.
 
-### Phase 8 — Regression scenario generation
+### Phase 10 — Regression scenario generation
 - Invoke `spec-to-regression`.
 - Ensure every relevant criterion maps to browser/API regression scenarios.
 - After generation completes, execute the **Artifact Commit-and-Link** procedure for the regression spec (artifact_key=`regression_spec`, artifact_label="Regression Spec").
 - Update the state file with regression artifact paths, `regression_coverage_gate` status, and artifact commit-and-link results.
 
-### Phase 9 — Test code generation
+### Phase 11 — Test code generation
 - Invoke `api-integration-codegen` and `browser-integration-codegen`.
 - Generate executable tests from the regression specs.
 - Update the state file with generated test artifact paths and `generated_test_gate` status.
 
-### Phase 10 — Test quality validation
+### Phase 12 — Test quality validation
 - Invoke `test-quality-validator --strict`.
 - Block advancement if coverage is incomplete or false-green risks remain.
 - Update the state file with validation outputs and `test_quality_gate` status.
 
-### Phase 11 — QA execution
-- Invoke `qa` only after Phase 8, Phase 9, and Phase 10 are complete.
+### Phase 13 — QA execution
+- Invoke `qa` only after Phase 10, Phase 11, and Phase 12 are complete.
 - QA is the execution phase that runs the relevant tests, validates the built artifact, and produces QA evidence.
 - Fix blocking defects and re-run the necessary gates.
 - Update the state file with QA outputs, blocker list, rerun notes, and `qa_execution_gate` status.
 
-### Phase 12 — Simplicity and architecture review
+### Phase 14 — Simplicity and architecture review
 - Invoke `code-review` after QA passes.
 - Review the actual implementation for simplicity, unnecessary abstraction, requirement compliance, and architecture fit.
-- This is distinct from the design-time simplicity gate in Phase 5.
+- This is distinct from the design-time simplicity gate in Phase 7.
 - Update the state file with review evidence and `implementation_simplicity_gate` status.
 
-### Phase 13 — PR creation and CI resolution
+### Phase 15 — PR creation and CI resolution
 - Create or update the PR with clear evidence.
 - Monitor and fix CI failures deterministically.
 - Update the state file with `github.pr_url`, `github.ci_url`, CI status, and any related blockers.
 
-### Phase 14 — Final verification and acceptance
+### Phase 16 — Final verification and acceptance
 - Invoke `verification-before-completion`.
 - Re-run the exact commands required to justify completion claims.
 - Produce acceptance-criteria-to-evidence mapping.
 - Update the state file with verification artifacts, `final_verification_gate` status, and final acceptance status when approved.
 
-### Phase 15 — Closeout and GitHub sync
+### Phase 17 — Closeout and GitHub sync
 - Update the GitHub issue and any associated project item.
 - Record final evidence summary, PR link, CI status, and any follow-up debt/issues.
 - Move to Done only after human acceptance is recorded.
@@ -410,6 +432,7 @@ Do not advance a phase without the required evidence.
 - `Issue Clarification Recovery Gate` — if the issue started in `discovery-recovery`, approved brainstorm artifacts exist, draft testable acceptance criteria exist, and the approved clarification has been appended to the existing issue without overwriting prior content
 - `Brainstorm Discovery Gate` — interactive clarification happened, key questions were answered or explicitly waived, transcript evidence exists, and strategy fit was captured when strategy docs were available
 - `Spec Gate` — PRD and tech spec reviews have no blocking issues
+- `Design Completeness Gate` — design spec covers all user flows from PRD, accessibility requirements are specified, component specs are feasible
 - `Design Simplicity Gate` — tech spec is simple, justified, and repo-fit
 - `Regression Coverage Gate` — criteria map to regression scenarios
 - `Generated Test Gate` — code-generated tests exist and align with specs
@@ -425,6 +448,7 @@ Always stop for human confirmation on:
 - brainstorm approval
 - issue clarification approval before any GitHub issue update in `discovery-recovery` mode
 - PRD approval after review
+- design approval after design review
 - tech spec approval after review
 - execution scope approval before coding
 - final acceptance before closeout

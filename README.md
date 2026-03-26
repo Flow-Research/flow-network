@@ -160,6 +160,8 @@ jarvis --help
 | `pnpm skills:validate` | Validate shared skill source and catalog consistency |
 | `pnpm skills:register` | Copy project-local skills into `~/.agents/skills/` and refresh OpenCode + Claude registration |
 | `pnpm skills:register:claude` | Rebuild Claude marketplace metadata from `~/.agents/skills/` |
+| `pnpm flow:sync` | Re-run the Flow installer from cached harness — pull latest skills, scripts, and templates |
+| `pnpm flow:cleanup` | Clean stale plugin artifacts from old registrations |
 | `pnpm harness:verify` | Verify repo, OpenCode, and Claude harness parity |
 | `pnpm harness:eval` | Run isolated fixture-based Flow installation acceptance checks |
 | `pnpm harness:eval:remote` | Run remote-style Docker bootstrap validation using `install.sh` |

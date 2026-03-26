@@ -36,7 +36,7 @@ These rules are mandatory.
 7. Never silently discard local changes. If a stash is created, report it and either restore it or stop with recovery guidance.
 8. Never leave a failed PR unattended after `push`. Either the autonomous PR-resolution loop starts successfully, or the command ends in an explicit safe escalation state.
 9. Never claim success without fresh verification evidence.
-10. Never merge a PR. The push flow ensures the PR is green and ready, then stops. Merging is always the user's action.
+10. Never merge a PR. Never ask to merge a PR. Never offer to merge. The push flow creates or updates a PR, monitors CI, and reports readiness. Merging is always the user's own action outside of context-sync.
 
 ## Mode Semantics
 
@@ -637,7 +637,7 @@ gh pr view -R "$PR_REPO" <number> --json number,url,state,mergeStateStatus,revie
 - `waiting_for_review`: keep watching until review changes state or an SLA threshold is hit; do not spam commits
 - `requested_changes_ambiguous`: escalate safely
 - `merge_conflict`: attempt a safe rebase only if the conflict is absent; otherwise escalate
-- `ready_to_merge`: report that the PR is green and ready to merge. Do NOT merge — stop the loop and report to the user. Merging is always the user's action.
+- `ready_to_merge`: report that the PR is green and ready to merge. Do NOT merge. Do NOT ask the user if they want to merge. Stop the loop and report readiness.
 - `closed`: stop and mark `closed_by_user`
 
 ### Step 10: Start the PR resolution loop
@@ -649,7 +649,7 @@ After Step 9 (PR created or reused), the push flow MUST start the PR resolution 
    gh pr view -R "$PR_REPO" <number> --json state,mergeStateStatus,reviewDecision,statusCheckRollup,isDraft
    ```
 
-2. **If immediately ready** (all checks passed, no review blockers): record `pr_loop=ready_to_merge` and report to user. Do NOT merge.
+2. **If immediately ready** (all checks passed, no review blockers): record `pr_loop=ready_to_merge` and report to user. Do NOT merge. Do NOT ask the user if they want to merge.
 
 3. **If not immediately ready** (CI running, waiting for review): launch a background agent to monitor the PR:
    - Use the `Agent` tool with `run_in_background: true`
@@ -657,7 +657,7 @@ After Step 9 (PR created or reused), the push flow MUST start the PR resolution 
    - It classifies blockers and acts per the Loop Contract above
    - It fixes mechanical CI failures (lint, test) up to the retry budget
    - It escalates non-mechanical issues (review feedback, conflicts)
-   - When CI passes and PR is ready: report `ready_to_merge` and stop. Do NOT merge.
+   - When CI passes and PR is ready: report `ready_to_merge` and stop. Do NOT merge. Do NOT ask to merge.
    - Record `pr_loop=background_started` in the summary
 
 4. **If the background agent cannot be started**: record `pr_loop=failed_to_start` and escalate. Never leave a PR unattended.
@@ -669,7 +669,7 @@ The background agent prompt must include:
 - Working directory
 - Retry budget (MAX_AUTONOMOUS_ATTEMPTS=5, MAX_REPEATED_BLOCKER_ATTEMPTS=3)
 - The full loop contract (terminal states, blocker classification)
-- Explicit instruction: NEVER merge the PR. Report ready_to_merge and stop.
+- Explicit instruction: NEVER merge the PR. NEVER ask the user if they want to merge. Report ready_to_merge and stop.
 
 The final summary must clearly state whether:
 - The PR is ready to merge (`pr_loop=ready_to_merge`)
