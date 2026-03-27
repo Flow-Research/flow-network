@@ -60,6 +60,27 @@ Rules:
 - New issue-flow runs must create or reuse the canonical sibling worktree immediately.
 - Legacy runs without git metadata remain supported; migrate them lazily when the issue next enters active execution.
 
+## Worktree Scope Enforcement
+
+Once an issue worktree is created, ALL file operations for that issue — spec generation, artifact writes, implementation, test generation, commits, pushes — MUST happen from inside the worktree directory. Writing files to the main checkout or any other worktree is a hard error.
+
+### Enforcement rules
+
+1. Before invoking any child skill that produces files (`prd`, `design-spec`, `tech-spec`, `engineer`, `spec-to-regression`, `api-integration-codegen`, `browser-integration-codegen`, `test-quality-validator`, `qa`, `code-review`), run the worktree assertion:
+   ```bash
+   python3 "${AGENTS_SKILLS_ROOT}/issue-flow/scripts/issue_flow_git.py" assert-cwd \
+       --branch "<git.branch from state>"
+   ```
+   If exit code is non-zero, HARD STOP. Report the expected worktree path and current directory to the user.
+
+2. Never write spec artifacts, implementation code, tests, or review outputs to the main checkout.
+
+3. Never copy files from the main checkout to the worktree after the fact — this masks the root cause. Re-run the phase from the correct directory.
+
+4. The spec root (`${SPEC_ROOT}`) must be resolved relative to the worktree checkout, not the main repository.
+
+5. If the agent's working directory drifts (e.g., after a tool invocation resets cwd), re-derive the worktree path from state and cd back before continuing.
+
 ## State File Location
 
 Each issue-flow epic has its own resumable checkpoint file:
@@ -268,6 +289,7 @@ When a transition rule has `pause_after=true`:
 3. Never start tech-spec before PRD artifact commit-and-link is complete.
 4. Never auto-start any phase marked with `pause_after` — always wait for explicit user instruction.
 5. After artifact commit-and-link at a pause point, set `next_action` to describe what the user must say.
+6. Before any phase that creates, modifies, or commits files (Phases 2–15), verify the current working directory is inside the resolved issue worktree by running `issue_flow_git.py assert-cwd --branch <git.branch>`. If this check fails, HARD STOP. Do not write any files. Report the mismatch to the user and cd into the correct worktree before retrying. Never copy files from the main checkout to the worktree as a workaround — re-run the phase from the correct directory.
 
 ## Phase Rules
 
@@ -318,6 +340,7 @@ When a transition rule has `pause_after=true`:
 - When the user approves the append-only issue update and the issue is edited successfully, mark `gates.human.issue_append_approval` and `gates.quality.issue_clarification_recovery_gate` accordingly and append a `history` event.
 
 ### Phase 2 — PRD
+- **Worktree assertion**: Run `issue_flow_git.py assert-cwd --branch <git.branch>` before proceeding. Hard stop on failure.
 - Invoke `prd`.
 - Produce `product_spec.md` with explicit, testable acceptance criteria.
 - Carry forward the strategy-derived goals, non-goals, and workflow constraints from intake and brainstorm instead of rediscovering them ad hoc.
@@ -330,9 +353,10 @@ When a transition rule has `pause_after=true`:
 - Stop for human approval before design spec starts.
 - After the user approves `prd_approval`, execute the **Artifact Commit-and-Link** procedure for `product_spec.md` (artifact_key=`product_spec`, artifact_label="Product Spec (PRD)").
 - After artifact commit-and-link completes, run the **Pause Protocol**: set `phase.status` to `paused_awaiting_instruction` with `next_action` = "Await explicit user instruction to start design spec." Report the pause and stop. Do NOT proceed to Phase 4 until the user explicitly says to start design spec.
-- Update the state file with PRD review artifacts, `spec_gate` status, human approval status, artifact commit-and-link results, and `next_action`.
+- Update the state file with PRD review artifacts, `spec_gate` status, human approval status, artifact commit-and-link results, `github.pr_url`, and `next_action`.
 
 ### Phase 4 — Design specification
+- **Worktree assertion**: Run `issue_flow_git.py assert-cwd --branch <git.branch>` before proceeding. Hard stop on failure.
 - Invoke `design-spec`.
 - Read `product_spec.md` as primary input. Carry forward personas, user flows, and UI requirements from the PRD.
 - Produce `design_spec.md` with Mermaid user flow diagrams, screen inventory, component specifications, interaction patterns, accessibility requirements, responsive behavior, and placeholder sections for Figma/screenshot links.
@@ -345,9 +369,10 @@ When a transition rule has `pause_after=true`:
 - Stop for human approval before tech spec starts.
 - After the user approves `design_approval`, execute the **Artifact Commit-and-Link** procedure for `design_spec.md` (artifact_key=`design_spec`, artifact_label="Design Spec").
 - After artifact commit-and-link completes, run the **Pause Protocol**: set `phase.status` to `paused_awaiting_instruction` with `next_action` = "Await explicit user instruction to start tech spec." Report the pause and stop. Do NOT proceed to Phase 6 until the user explicitly says to start tech spec.
-- Update the state file with design review artifacts, `design_completeness_gate` status, human approval status, artifact commit-and-link results, and `next_action`.
+- Update the state file with design review artifacts, `design_completeness_gate` status, human approval status, artifact commit-and-link results, `github.pr_url`, and `next_action`.
 
 ### Phase 6 — Tech spec
+- **Worktree assertion**: Run `issue_flow_git.py assert-cwd --branch <git.branch>` before proceeding. Hard stop on failure.
 - Invoke `tech-spec`.
 - Require `design_spec.md` as mandatory input (not optional). If missing, stop with error: "Run /design-spec first."
 - Produce `technical_spec.md` that is minimal, coherent, and repo-fit.
@@ -361,7 +386,7 @@ When a transition rule has `pause_after=true`:
 - Stop for human approval before implementation begins.
 - After the user approves `tech_spec_approval`, execute the **Artifact Commit-and-Link** procedure for `technical_spec.md` (artifact_key=`technical_spec`, artifact_label="Technical Spec").
 - After artifact commit-and-link completes, run the **Pause Protocol**: set `phase.status` to `paused_awaiting_instruction` with `next_action` = "Await explicit user instruction to start implementation planning." Report the pause and stop. Do NOT proceed to Phase 6 until the user explicitly says to start.
-- Update the state file with tech-spec review artifacts, `design_simplicity_gate`, human approval status, artifact commit-and-link results, and `next_action`.
+- Update the state file with tech-spec review artifacts, `design_simplicity_gate`, human approval status, artifact commit-and-link results, `github.pr_url`, and `next_action`.
 
 ### Phase 8 — Execution scope confirmation
 - Confirm the smallest valid implementation slice.
@@ -371,19 +396,26 @@ When a transition rule has `pause_after=true`:
 - Update the state file with blockers, scope notes, debt links, execution-scope approval status, and `next_action`.
 
 ### Phase 9 — Implementation
+- **Worktree assertion (mandatory first step)**: Verify the current working directory is the resolved issue worktree before invoking any child skill:
+  ```bash
+  python3 "${AGENTS_SKILLS_ROOT}/issue-flow/scripts/issue_flow_git.py" assert-cwd \
+      --branch "<git.branch from state>"
+  ```
+  If this fails, resolve the correct worktree path from `git.worktree_dirname` in state, cd into it, and re-run the assertion before proceeding. Do NOT invoke `engineer` from the main checkout.
 - Invoke `engineer`.
-- Run implementation from the resolved issue worktree, not the user's unrelated checkout.
 - Implement only the approved scope.
 - Maintain evidence that maps implementation work to acceptance criteria.
 - Update the state file with implementation evidence pointers and relevant git/GitHub references.
 
 ### Phase 10 — Regression scenario generation
+- **Worktree assertion**: Run `issue_flow_git.py assert-cwd --branch <git.branch>` before proceeding. Hard stop on failure.
 - Invoke `spec-to-regression`.
 - Ensure every relevant criterion maps to browser/API regression scenarios.
 - After generation completes, execute the **Artifact Commit-and-Link** procedure for the regression spec (artifact_key=`regression_spec`, artifact_label="Regression Spec").
-- Update the state file with regression artifact paths, `regression_coverage_gate` status, and artifact commit-and-link results.
+- Update the state file with regression artifact paths, `regression_coverage_gate` status, artifact commit-and-link results, and `github.pr_url`.
 
 ### Phase 11 — Test code generation
+- **Worktree assertion**: Run `issue_flow_git.py assert-cwd --branch <git.branch>` before proceeding. Hard stop on failure.
 - Invoke `api-integration-codegen` and `browser-integration-codegen`.
 - Generate executable tests from the regression specs.
 - Update the state file with generated test artifact paths and `generated_test_gate` status.
@@ -394,6 +426,7 @@ When a transition rule has `pause_after=true`:
 - Update the state file with validation outputs and `test_quality_gate` status.
 
 ### Phase 13 — QA execution
+- **Worktree assertion**: Run `issue_flow_git.py assert-cwd --branch <git.branch>` before proceeding. Hard stop on failure.
 - Invoke `qa` only after Phase 10, Phase 11, and Phase 12 are complete.
 - QA is the execution phase that runs the relevant tests, validates the built artifact, and produces QA evidence.
 - Fix blocking defects and re-run the necessary gates.
@@ -406,8 +439,15 @@ When a transition rule has `pause_after=true`:
 - Update the state file with review evidence and `implementation_simplicity_gate` status.
 
 ### Phase 15 — PR creation and CI resolution
-- Create or update the PR with clear evidence.
-- Monitor and fix CI failures deterministically.
+- Check if `github.pr_url` is already set in the state file (from earlier artifact commit-and-link).
+- If a PR already exists:
+  - Verify it is still open: `gh pr view <number> --json state -q '.state'`.
+  - If open, update the PR body with full implementation evidence, test results, QA summary, and code review results from prior phases. Replace the spec-only body with a comprehensive delivery summary while preserving the spec checklist and `Closes #<issue_number>`.
+  - If closed or merged, create a new PR using the same base branch resolution and format as the Artifact Commit-and-Link procedure.
+- If no PR exists yet:
+  - Resolve the base branch: read `git.base_branch` from state; if unset or missing on remote, check for `dev` then fall back to `main`.
+  - Create the PR: `gh pr create --base <PR_BASE> --head <branch> --title "feat(#<issue_number>): <issue_title>" --body <body>` with full delivery evidence.
+- After the PR exists, monitor and fix CI failures deterministically.
 - Update the state file with `github.pr_url`, `github.ci_url`, CI status, and any related blockers.
 
 ### Phase 16 — Final verification and acceptance
@@ -508,25 +548,85 @@ A reusable procedure for committing an approved artifact to the issue branch and
    gh issue comment <issue_number> --body "**<artifact_label> committed** — [View on branch \`<branch>\`](<FILE_URL>)"
    ```
 
-   f. **Update state** by merging into `artifact_commits.<artifact_key>`:
+   f. **Resolve PR base branch**:
+   - Read `git.base_branch` from the state file. If it is set and the branch exists on the remote, use it as `PR_BASE`.
+   - Otherwise, check if `dev` exists on the remote:
+     ```bash
+     git ls-remote --heads origin dev | grep -q dev
+     ```
+     If yes, set `PR_BASE=dev`. Otherwise, set `PR_BASE=main`.
+
+   g. **Create or update PR**:
+   - If `github.pr_url` is already set in state, extract the PR number and verify it is still open:
+     ```bash
+     gh pr view <number> --json state -q '.state'
+     ```
+     If the PR is `OPEN`, update its body (see body format below). If it is `CLOSED` or `MERGED`, treat as no existing PR and create a new one.
+   - If no PR URL is in state, check for an existing open PR matching the branch:
+     ```bash
+     gh pr list --state open --head "<branch>" --json number,url -q '.[0]'
+     ```
+   - If an open PR is found, update its body. If none is found, create a new PR:
+     ```bash
+     gh pr create --base "$PR_BASE" --head "<branch>" \
+       --title "feat(#<issue_number>): <issue_title>" \
+       --body "$PR_BODY"
+     ```
+     To create a draft PR instead, add `--draft` to the command above.
+
+   **PR body format** — build a spec progress checklist from `artifact_commits.*` in state. For each artifact key (`product_spec`, `design_spec`, `technical_spec`, `regression_spec`):
+   - `committed: true` → `- [x] <label>`
+   - `skipped: true` → `- [~] <label> (skipped)`
+   - otherwise → `- [ ] <label>`
+
+   ```markdown
+   ## #<issue_number>: <issue_title>
+
+   ### Spec Progress
+   - [x] Product Spec (PRD)
+   - [ ] Design Spec
+   - [ ] Technical Spec
+   - [ ] Regression Spec
+
+   ---
+   _This PR is managed by issue-flow. Specs are committed as they are approved._
+
+   Closes #<issue_number>
+   ```
+
+   On subsequent artifact commits, rewrite the full PR body with the updated checklist via `gh pr edit <number> --body "$UPDATED_PR_BODY"`.
+
+   h. **Update state** by merging into `artifact_commits.<artifact_key>`:
    ```json
    {
      "committed": true,
      "commit_sha": "<sha>",
      "pushed": true,
      "github_comment_posted": true,
+     "pr_created": true,
      "skipped": false,
      "timestamp": "<ISO 8601>"
    }
    ```
+   Also merge the PR URL into state:
+   ```json
+   {
+     "github": {
+       "pr_url": "<PR_URL>"
+     }
+   }
+   ```
 
-   g. **Append a history event** with `event: "artifact_committed_and_linked"`.
+   i. **Append history events**:
+   - `event: "artifact_committed_and_linked"` for the artifact commit.
+   - `event: "pr_created_or_updated"` with `details: "PR <created|updated> at <PR_URL> after <artifact_label> commit"`.
 
 ### Failure Handling
 
-- If the commit or push fails, report the error to the user and do not post the GitHub comment. Record `error` in `artifact_commits.<artifact_key>`.
+- If the commit or push fails, report the error to the user and do not post the GitHub comment or create a PR. Record `error` in `artifact_commits.<artifact_key>`.
 - If the GitHub comment fails, record the commit SHA in state anyway and note the comment failure. The artifact is still committed; the link can be posted manually.
-- Never block phase advancement on a comment-posting failure. The commit is the important part.
+- If PR creation or update fails, log the error and record `pr_error` in `artifact_commits.<artifact_key>`. Set `pr_created` to `false`. The PR can be created manually or will be retried at the next artifact commit or at Phase 15.
+- Never block phase advancement on a comment-posting or PR failure. The commit is the important part.
 
 ## Output Contract
 

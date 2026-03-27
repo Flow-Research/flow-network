@@ -196,6 +196,36 @@ def info_payload(repo_root: Path) -> Dict[str, Any]:
     }
 
 
+def assert_cwd(repo_root: Path, branch: str) -> Dict[str, Any]:
+    """Assert that cwd is inside the expected issue worktree."""
+    expected = canonical_worktree_path(repo_root, branch)
+    cwd = Path.cwd().resolve()
+    expected_resolved = expected.resolve()
+
+    inside = False
+    try:
+        cwd.relative_to(expected_resolved)
+        inside = True
+    except ValueError:
+        pass
+
+    result: Dict[str, Any] = {
+        "valid": inside,
+        "cwd": str(cwd),
+        "expected_worktree": str(expected_resolved),
+        "branch": branch,
+    }
+
+    if not inside:
+        result["error"] = (
+            f"Current directory ({cwd}) is NOT inside the expected worktree "
+            f"({expected_resolved}). All issue-flow file operations must happen "
+            f"inside the issue worktree. cd into the worktree before proceeding."
+        )
+
+    return result
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Portable git/worktree helpers for issue-flow")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -219,6 +249,10 @@ def parse_args() -> argparse.Namespace:
     find_state_parser.add_argument("--repo-root")
     find_state_parser.add_argument("--spec-root-rel", required=True)
     find_state_parser.add_argument("--issue-number")
+
+    assert_parser = subparsers.add_parser("assert-cwd")
+    assert_parser.add_argument("--repo-root")
+    assert_parser.add_argument("--branch", required=True)
 
     return parser.parse_args()
 
@@ -246,6 +280,11 @@ def main() -> int:
     if args.command == "find-state":
         print(json.dumps(find_state_files(repo_root, args.spec_root_rel, args.issue_number), indent=2))
         return 0
+
+    if args.command == "assert-cwd":
+        result = assert_cwd(repo_root, args.branch)
+        print(json.dumps(result, indent=2))
+        return 0 if result["valid"] else 1
 
     raise ValueError(f"Unknown command: {args.command}")
 
