@@ -42,7 +42,7 @@ bash tests/harness/run-remote-install-docker.sh
 
 How it works:
 
-- scaffolds an external `dev-container` bundle under `~/containers/flow-harness/install-eval`
+- scaffolds an external `dev-container` bundle under `~/containers/harnessy/install-eval`
 - builds a container image from that bundle
 - snapshots the current working tree into a temporary git repo
 - serves the snapshot over a local HTTP server so the bootstrap path uses `curl`

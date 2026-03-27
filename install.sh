@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-FLOW_REPO_URL="${FLOW_REPO_URL:-https://github.com/Flow-Research/flow-harness.git}"
-FLOW_INSTALL_DIR="${FLOW_INSTALL_DIR:-$HOME/flow-harness}"
-FLOW_CACHE_DIR="${FLOW_CACHE_DIR:-$HOME/.cache/flow-harness}"
+FLOW_REPO_URL="${FLOW_REPO_URL:-https://github.com/Flow-Research/harnessy.git}"
+FLOW_INSTALL_DIR="${FLOW_INSTALL_DIR:-$HOME/harnessy}"
+FLOW_CACHE_DIR="${FLOW_CACHE_DIR:-$HOME/.cache/harnessy}"
 FLOW_NONINTERACTIVE="${FLOW_NONINTERACTIVE:-0}"
 FLOW_SKIP_SUBPROJECTS="${FLOW_SKIP_SUBPROJECTS:-0}"
 

@@ -1,0 +1,12 @@
+name: skill-improve
+type: opencode
+version: 0.1.0
+owner: julian
+status: experimental
+blast_radius: high
+description: "Analyze accumulated decision traces for a skill and propose concrete SKILL.md or command doc mutations to address recurring feedback patterns."
+permissions: [read, write]
+data_categories: [none]
+egress: []
+invoke: /skill-improve
+location: tools/flow-install/skills/skill-improve

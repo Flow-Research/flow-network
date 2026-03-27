@@ -101,12 +101,20 @@ def default_state(spec_root: str, epic_name: str, epic_path: str) -> Dict[str, A
             "qa_summary": None,
             "qa_logs": [],
             "verification_report": None,
+            "design_mockup": None,
         },
         "artifact_commits": {
             "product_spec": {"committed": False, "skipped": False, "pr_created": False},
             "design_spec": {"committed": False, "skipped": False, "pr_created": False},
             "technical_spec": {"committed": False, "skipped": False, "pr_created": False},
+            "design_mockup": {"committed": False, "skipped": False, "pr_created": False},
             "regression_spec": {"committed": False, "skipped": False, "pr_created": False},
+        },
+        "mockup": {
+            "offered": False,
+            "declined": False,
+            "generated": False,
+            "reviewed": False,
         },
         "reconciliation": {
             "last_checked_at": None,

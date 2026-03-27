@@ -1,6 +1,6 @@
 name: issue-flow
 type: opencode
-version: 0.7.0
+version: 0.8.0
 owner: julian
 status: experimental
 blast_radius: high
@@ -10,6 +10,30 @@ data_categories: [none]
 egress: [api.github.com, github.com]
 invoke: /issue-flow
 location: tools/flow-install/skills/issue-flow
+traces:
+  enabled: true
+  gates:
+    quality:
+      - issue_readiness_check
+      - issue_clarification_recovery_gate
+      - brainstorm_discovery_gate
+      - spec_gate
+      - design_completeness_gate
+      - design_simplicity_gate
+      - regression_coverage_gate
+      - generated_test_gate
+      - test_quality_gate
+      - qa_execution_gate
+      - implementation_simplicity_gate
+      - final_verification_gate
+    human:
+      - brainstorm_approval
+      - issue_append_approval
+      - prd_approval
+      - design_approval
+      - tech_spec_approval
+      - execution_scope_approval
+      - final_acceptance
 dependencies:
   - tool: gh
     description: "GitHub CLI for issue operations"

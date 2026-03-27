@@ -1,0 +1,6 @@
+# Flow harness merge strategies
+# These files contain auto-generated timestamps and metadata that always
+# conflict on rebase/merge. Use "ours" strategy to keep the current branch's
+# version since the content is regenerated on next flow-install run anyway.
+flow-install.lock.json merge=ours
+.jarvis/context/AGENTS.md merge=ours

@@ -238,6 +238,17 @@ const main = async () => {
     log.ok("flow-install.lock.json written");
   }
 
+  // ── Configure git merge strategy for auto-generated files ───────────────
+  if (runAll && !dryRun) {
+    try {
+      const { execFileSync } = await import("node:child_process");
+      execFileSync("git", ["config", "merge.ours.driver", "true"], { cwd: projectRoot, stdio: "ignore" });
+      log.ok("git merge.ours driver configured (prevents lock/AGENTS conflicts on rebase)");
+    } catch {
+      // Not a git repo or git not available — skip silently
+    }
+  }
+
   // ── Summary ─────────────────────────────────────────────────────────────
   console.log("");
   if (dryRun) {

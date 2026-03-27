@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
-  "timestamp": "2026-03-27T15:04:03.628Z",
-  "project": "flow-harness",
+  "timestamp": "2026-03-27T17:10:05.392Z",
+  "project": "harnessy",
   "monorepo": null,
   "apps": [],
   "gitOrg": "Flow-Research",
@@ -28,6 +28,7 @@
     "community-skills-install",
     "context-sync",
     "cto",
+    "design-mockup",
     "design-spec",
     "design-spec-review",
     "dev-container",

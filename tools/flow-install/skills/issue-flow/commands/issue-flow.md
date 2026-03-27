@@ -202,6 +202,7 @@ Deliver quality against the issue's acceptance criteria and approved specs.
 - `design-spec-review`
 - `tech-spec`
 - `tech-spec-review`
+- `design-mockup`
 - `engineer`
 - `spec-to-regression`
 - `api-integration-codegen`
@@ -290,6 +291,60 @@ When a transition rule has `pause_after=true`:
 4. Never auto-start any phase marked with `pause_after` — always wait for explicit user instruction.
 5. After artifact commit-and-link at a pause point, set `next_action` to describe what the user must say.
 6. Before any phase that creates, modifies, or commits files (Phases 2–15), verify the current working directory is inside the resolved issue worktree by running `issue_flow_git.py assert-cwd --branch <git.branch>`. If this check fails, HARD STOP. Do not write any files. Report the mismatch to the user and cd into the correct worktree before retrying. Never copy files from the main checkout to the worktree as a workaround — re-run the phase from the correct directory.
+
+## Decision Trace Protocol
+
+Issue-flow participates in the skill evolution system by capturing decision traces at gate resolutions and consulting accumulated feedback before gated phases.
+
+### Trace Consultation (short loop)
+
+Before executing any phase that contains a human or quality gate, query accumulated decision traces for that gate to incorporate lessons from prior runs:
+
+```bash
+python3 "${AGENTS_SKILLS_ROOT}/_shared/trace_query.py" recent \
+    --skill "issue-flow" --gate "<gate_name>" --limit 5 --min-loops 1
+```
+
+If the output contains PATTERNS or RECENT FEEDBACK, incorporate those as additional constraints for the current phase. For example, if past PRD reviews consistently flag "missing mobile use case", proactively address mobile considerations in the current PRD.
+
+Do not cite traces to the user unless they ask. Simply produce better output.
+
+### Trace Capture (after gate resolution)
+
+After every gate resolves (human or quality), capture a decision trace:
+
+```bash
+python3 "${AGENTS_SKILLS_ROOT}/_shared/trace_capture.py" capture \
+    --skill "issue-flow" \
+    --gate "<gate_name>" --gate-type "<human|quality>" \
+    --outcome "<approved|rejected|passed|failed>" \
+    --refinement-loops <N> \
+    --state-path "${SPEC_ROOT}/<epic>/.issue-flow-state.json" \
+    [--feedback "<user's feedback text>"] \
+    [--category <CATEGORY>]
+```
+
+Capture rules:
+- For human gates: include the user's feedback text from refinement loops as `--feedback` arguments (one per distinct feedback item). If the user provided no verbal feedback (approved on first pass), omit `--feedback`.
+- For quality gates: omit `--feedback`. The outcome (passed/failed) is the signal.
+- `--refinement-loops` is the count of rejection/refinement cycles before the gate resolved.
+- `--category` uses the standard taxonomy: `MISSING_SCOPE`, `UNCLEAR_CRITERIA`, `OVER_ENGINEERING`, `INCOMPLETE_IMPLEMENTATION`, `ACCESSIBILITY_GAP`, `MISSING_EDGE_CASE`, `ARCHITECTURE_MISFIT`, `COUPLING_ISSUE`.
+
+### Post-Run Retrospective
+
+At Phase 17 closeout, after all gates pass and before final GitHub sync:
+
+1. Ask the user: **"Any overall feedback on this issue-flow run? (skip to close out)"**
+2. If the user provides feedback, capture it:
+   ```bash
+   python3 "${AGENTS_SKILLS_ROOT}/_shared/trace_capture.py" capture \
+       --skill "issue-flow" \
+       --gate "run_retrospective" --gate-type "retrospective" \
+       --outcome "approved" \
+       --state-path "${SPEC_ROOT}/<epic>/.issue-flow-state.json" \
+       --feedback "<user's feedback>"
+   ```
+3. If the user skips, proceed to closeout with no trace.
 
 ## Phase Rules
 
@@ -393,7 +448,18 @@ When a transition rule has `pause_after=true`:
 - Record any intentional deferrals as technical debt.
 - Stop for human approval before coding starts.
 - If this issue is a legacy run without `git.*` metadata, derive the branch/worktree metadata now and migrate execution into the canonical sibling worktree before Phase 7 starts.
-- Update the state file with blockers, scope notes, debt links, execution-scope approval status, and `next_action`.
+- After `execution_scope_approval` passes, ask the user: **"Would you like a design mockup before full implementation? This generates a working UI prototype with dummy data from your specs for visual review."**
+  - **If the user declines**: merge `{"mockup": {"offered": true, "declined": true}}` into state. Set `artifact_commits.design_mockup.skipped` to `true`. Proceed to Phase 9.
+  - **If the user accepts**:
+    1. **Worktree assertion**: Run `issue_flow_git.py assert-cwd --branch <git.branch>` before proceeding. Hard stop on failure.
+    2. Merge `{"mockup": {"offered": true, "declined": false}}` into state.
+    3. Invoke `design-mockup` with `design_spec.md` and `technical_spec.md` from the epic folder.
+    4. After generation completes, merge `{"mockup": {"generated": true}}` and set `artifacts.design_mockup` to the mockup directory path.
+    5. Execute the **Artifact Commit-and-Link** procedure for the mockup (artifact_key=`design_mockup`, artifact_label="Design Mockup", artifact_path=`<epic>/mockup/`).
+    6. Report the mockup link to the user: "Design mockup committed. Review it at [link]. When satisfied, say **'proceed to implementation'** to continue."
+    7. Set `phase.status` to `paused_awaiting_instruction` with `next_action` = "Review design mockup and say 'proceed to implementation'."
+    8. When the user says to proceed, merge `{"mockup": {"reviewed": true}}` into state and continue to Phase 9.
+- Update the state file with blockers, scope notes, debt links, execution-scope approval status, mockup state, and `next_action`.
 
 ### Phase 9 — Implementation
 - **Worktree assertion (mandatory first step)**: Verify the current working directory is the resolved issue worktree before invoking any child skill:
@@ -586,6 +652,7 @@ A reusable procedure for committing an approved artifact to the issue branch and
    - [x] Product Spec (PRD)
    - [ ] Design Spec
    - [ ] Technical Spec
+   - [ ] Design Mockup (optional)
    - [ ] Regression Spec
 
    ---

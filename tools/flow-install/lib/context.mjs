@@ -183,7 +183,7 @@ Files may start with \`{{global}}\`. This is a Jarvis CLI feature; treat as no-o
 
 ## Installed by
 
-[flow-install](https://github.com/Flow-Research/flow-harness/tree/main/tools/flow-install)
+[flow-install](https://github.com/Flow-Research/harnessy/tree/main/tools/flow-install)
 `;
 }
 

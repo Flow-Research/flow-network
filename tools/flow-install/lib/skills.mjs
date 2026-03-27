@@ -28,7 +28,7 @@ import {
 import { runCleanup, buildCleanupContext } from "./cleanup.mjs";
 
 const GLOBAL_CLAUDE_KNOWN_MARKETPLACES = path.join(homeDir, ".claude", "plugins", "known_marketplaces.json");
-const FLOW_CLAUDE_PLUGIN_ID = "flow-harness";
+const FLOW_CLAUDE_PLUGIN_ID = "harnessy";
 
 const RESERVED_SCRIPT_NAMES = new Set([
   "register-skills.mjs",
@@ -180,13 +180,40 @@ export const installSkills = async (flowInstallRoot, { dryRun = false } = {}) =>
       const cmp = compareSemver(skill.version, existing.version || "0.0.0");
 
       if (cmp <= 0) {
+        // Check for unpromoted improvements (installed version ahead of source)
+        const installedAhead = compareSemver(existing.version || "0.0.0", skill.version) > 0;
+        if (installedAhead) {
+          const improvementsFile = path.join(homeDir, ".agents", "traces", skill.name, "improvements.ndjson");
+          const improvementsContent = await readFileSafe(improvementsFile);
+          if (improvementsContent) {
+            const unpromoted = improvementsContent.split("\n").filter(l => {
+              if (!l.trim()) return false;
+              try { const r = JSON.parse(l); return r.improvement_id && !r.type; } catch { return false; }
+            }).length;
+            if (unpromoted > 0) {
+              log.warn(`${skill.name}: installed v${existing.version} has ${unpromoted} unpromoted improvement(s) vs source v${skill.version}. Run /skill-promote ${skill.name} before upgrading source.`);
+            }
+          }
+        }
         log.skip(`${skill.name} (${existing.version || "unknown"} >= ${skill.version})`);
         skipped++;
         commandShims += await installSkillExecutables(targetDir, { dryRun });
         continue;
       }
 
-      // Upgrade
+      // Upgrade — but warn if installed had improvements that will be overwritten
+      const improvementsFile = path.join(homeDir, ".agents", "traces", skill.name, "improvements.ndjson");
+      const improvementsContent = await readFileSafe(improvementsFile);
+      if (improvementsContent) {
+        const unpromoted = improvementsContent.split("\n").filter(l => {
+          if (!l.trim()) return false;
+          try { const r = JSON.parse(l); return r.improvement_id && !r.type; } catch { return false; }
+        }).length;
+        if (unpromoted > 0) {
+          log.warn(`${skill.name}: overwriting installed v${existing.version} (${unpromoted} unpromoted improvement(s)) with source v${skill.version}. Improvements may be lost. Consider /skill-promote first.`);
+        }
+      }
+
       if (dryRun) {
         log.dryRun(`Would upgrade ${skill.name}: ${existing.version} -> ${skill.version}`);
         upgraded++;
@@ -291,7 +318,7 @@ export const registerClaudeSkills = async ({ dryRun = false } = {}) => {
   });
 
   await writeJson(path.join(marketplaceDir, "marketplace.json"), {
-    name: "flow_harness",
+    name: "harnessy",
     owner: {
       name: "Flow Research",
       email: "support@flowresearch.dev",
@@ -322,19 +349,19 @@ const updateClaudeSettings = async (skills) => {
   const settingsPath = GLOBAL_CLAUDE_SETTINGS;
   const existing = await readJsonSafe(settingsPath) || {};
 
-  // Remove all flow_harness marketplace/plugin references
+  // Remove all harnessy marketplace/plugin references
   // Symlinks in ~/.claude/skills/ are the primary discovery mechanism
   if (existing.extraKnownMarketplaces) {
-    delete existing.extraKnownMarketplaces.flow_harness;
+    delete existing.extraKnownMarketplaces.harnessy;
     delete existing.extraKnownMarketplaces.duru_claude_plugins;
   }
 
   if (!existing.enabledPlugins) existing.enabledPlugins = {};
-  // Clean up all flow_harness plugin references (bundled and individual)
-  delete existing.enabledPlugins[`${FLOW_CLAUDE_PLUGIN_ID}@flow_harness`];
-  delete existing.enabledPlugins["flow-skills@flow_harness"];
+  // Clean up all harnessy plugin references (bundled and individual)
+  delete existing.enabledPlugins[`${FLOW_CLAUDE_PLUGIN_ID}@harnessy`];
+  delete existing.enabledPlugins["flow-skills@harnessy"];
   for (const skill of skills) {
-    delete existing.enabledPlugins[`${skill.name}@flow_harness`];
+    delete existing.enabledPlugins[`${skill.name}@harnessy`];
   }
 
   await ensureDir(path.dirname(settingsPath));
@@ -343,7 +370,7 @@ const updateClaudeSettings = async (skills) => {
 
 const updateClaudeKnownMarketplaces = async () => {
   const known = await readJsonSafe(GLOBAL_CLAUDE_KNOWN_MARKETPLACES) || {};
-  known.flow_harness = {
+  known.harnessy = {
     source: { source: "directory", path: GLOBAL_CLAUDE_MARKETPLACE },
     installLocation: GLOBAL_CLAUDE_MARKETPLACE,
     lastUpdated: new Date().toISOString(),

@@ -14,7 +14,7 @@ const GLOBAL_COMMANDS_DIR = (process.env.XDG_BIN_HOME || "").trim() || path.join
 const GLOBAL_CLAUDE_MARKETPLACE = path.join(HOME, ".agents", "claude-marketplace");
 const GLOBAL_CLAUDE_SETTINGS = path.join(HOME, ".claude", "settings.json");
 const GLOBAL_CLAUDE_INSTALLED_PLUGINS = path.join(HOME, ".claude", "plugins", "installed_plugins.json");
-const GLOBAL_CLAUDE_PLUGIN_CACHE = path.join(HOME, ".claude", "plugins", "cache", "flow_harness");
+const GLOBAL_CLAUDE_PLUGIN_CACHE = path.join(HOME, ".claude", "plugins", "cache", "harnessy");
 const GLOBAL_OPENCODE_CONFIG = path.join(HOME, ".config", "opencode", "opencode.json");
 const projectRoot = process.cwd();
 const RESERVED_SCRIPT_NAMES = new Set(["register-skills.mjs", "validate-skills.mjs", "register-claude-skills.mjs", "cleanup-stale-plugins.mjs", "verify-harness.mjs", "sync-rules.mjs", "skills-root.mjs", "skills-root.config.json", "parse-frontmatter.mjs"]);
@@ -103,7 +103,7 @@ const installSkillExecutables = async (skillDir) => {
   return installed;
 };
 
-const FLOW_CLAUDE_PLUGIN_ID = "flow-harness";
+const FLOW_CLAUDE_PLUGIN_ID = "harnessy";
 
 const registerClaude = async () => {
   const entries = await fs.readdir(GLOBAL_SKILLS_DIR, { withFileTypes: true }).catch(() => []);
@@ -149,7 +149,7 @@ const registerClaude = async () => {
     description: "Flow harness skills bundle",
   });
   await writeJson(path.join(GLOBAL_CLAUDE_MARKETPLACE, ".claude-plugin", "marketplace.json"), {
-    name: "flow_harness",
+    name: "harnessy",
     owner: {
       name: "Flow Research",
       email: "support@flowresearch.dev",
@@ -165,23 +165,23 @@ const registerClaude = async () => {
 
   const settings = (await readJsonSafe(GLOBAL_CLAUDE_SETTINGS)) || {};
   if (!settings.extraKnownMarketplaces) settings.extraKnownMarketplaces = {};
-  settings.extraKnownMarketplaces.flow_harness = {
+  settings.extraKnownMarketplaces.harnessy = {
     source: { source: "directory", path: GLOBAL_CLAUDE_MARKETPLACE },
   };
   delete settings.extraKnownMarketplaces.duru_claude_plugins;
   if (!settings.enabledPlugins) settings.enabledPlugins = {};
-  settings.enabledPlugins[FLOW_CLAUDE_PLUGIN_ID + "@flow_harness"] = true;
-  delete settings.enabledPlugins["flow-skills@flow_harness"];
-  for (const skill of skills) delete settings.enabledPlugins[skill.name + "@flow_harness"];
+  settings.enabledPlugins[FLOW_CLAUDE_PLUGIN_ID + "@harnessy"] = true;
+  delete settings.enabledPlugins["flow-skills@harnessy"];
+  for (const skill of skills) delete settings.enabledPlugins[skill.name + "@harnessy"];
   await writeJson(GLOBAL_CLAUDE_SETTINGS, settings);
 
   // --- Clean stale artifacts from old per-skill registration approach ---
-  const bundledKey = FLOW_CLAUDE_PLUGIN_ID + "@flow_harness";
+  const bundledKey = FLOW_CLAUDE_PLUGIN_ID + "@harnessy";
 
-  // Clean individual @flow_harness entries from installed_plugins.json
+  // Clean individual @harnessy entries from installed_plugins.json
   const installed = await readJsonSafe(GLOBAL_CLAUDE_INSTALLED_PLUGINS);
   if (installed?.plugins) {
-    const staleKeys = Object.keys(installed.plugins).filter(k => k.endsWith("@flow_harness") && k !== bundledKey);
+    const staleKeys = Object.keys(installed.plugins).filter(k => k.endsWith("@harnessy") && k !== bundledKey);
     if (staleKeys.length > 0) {
       for (const k of staleKeys) delete installed.plugins[k];
       await writeJson(GLOBAL_CLAUDE_INSTALLED_PLUGINS, installed);
@@ -189,7 +189,7 @@ const registerClaude = async () => {
     }
   }
 
-  // Clean individual skill dirs from plugin cache (keep only flow-harness/)
+  // Clean individual skill dirs from plugin cache (keep only harnessy/)
   if (await pathExists(GLOBAL_CLAUDE_PLUGIN_CACHE)) {
     const cacheEntries = await fs.readdir(GLOBAL_CLAUDE_PLUGIN_CACHE, { withFileTypes: true });
     const staleEntries = cacheEntries.filter(e => e.isDirectory() && e.name !== FLOW_CLAUDE_PLUGIN_ID);
@@ -197,7 +197,7 @@ const registerClaude = async () => {
     if (staleEntries.length > 0) console.log("  Removed " + staleEntries.length + " stale dirs from plugin cache");
   }
 
-  // Remove old marketplace/skills/ directory (superseded by flow-harness/skills/)
+  // Remove old marketplace/skills/ directory (superseded by harnessy/skills/)
   const oldMarketplaceSkills = path.join(GLOBAL_CLAUDE_MARKETPLACE, "skills");
   if (await pathExists(oldMarketplaceSkills)) {
     await fs.rm(oldMarketplaceSkills, { recursive: true, force: true });

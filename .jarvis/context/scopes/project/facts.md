@@ -1,6 +1,6 @@
 # Facts
 
-> Scoped to: project:flow-harness
+> Scoped to: project:harnessy
 > Memory type: facts
 > One entry per `---` block with YAML frontmatter (created_at, status, source)
 

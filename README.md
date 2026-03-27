@@ -52,14 +52,14 @@ Project-specific skills stay in each repo's `.agents/skills/` directory and are 
 ### Option 1: Bootstrap a full Flow workspace
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Flow-Research/flow-harness/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Flow-Research/harnessy/main/install.sh | bash
 ```
 
 This bootstrap script:
 
 - installs `uv` if needed
 - verifies `node` and `pnpm`
-- clones `flow-harness`
+- clones `harnessy`
 - installs `jarvis`
 - runs `flow-install`
 - installs repo-local lifecycle scripts plus global support directories
@@ -69,7 +69,7 @@ Useful environment variables:
 
 | Variable | Purpose | Example |
 |---|---|---|
-| `FLOW_INSTALL_DIR` | Where the workspace should be cloned | `/Users/name/flow-harness` |
+| `FLOW_INSTALL_DIR` | Where the workspace should be cloned | `/Users/name/harnessy` |
 | `FLOW_NONINTERACTIVE` | Skip prompts during bootstrap | `1` |
 | `FLOW_SKIP_SUBPROJECTS` | Do not clone optional sub-project repos | `1` |
 | `FLOW_REPO_URL` | Override the GitHub source | custom fork URL |
@@ -77,16 +77,16 @@ Useful environment variables:
 Example:
 
 ```bash
-FLOW_INSTALL_DIR="$HOME/work/flow-harness" \
+FLOW_INSTALL_DIR="$HOME/work/harnessy" \
 FLOW_NONINTERACTIVE=1 \
 FLOW_SKIP_SUBPROJECTS=1 \
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/Flow-Research/flow-harness/main/install.sh)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/Flow-Research/harnessy/main/install.sh)"
 ```
 
 ### Option 2: Install Jarvis only
 
 ```bash
-uv tool install --force "git+https://github.com/Flow-Research/flow-harness.git#subdirectory=Jarvis"
+uv tool install --force "git+https://github.com/Flow-Research/harnessy.git#subdirectory=Jarvis"
 jarvis --help
 ```
 
@@ -95,14 +95,14 @@ jarvis --help
 From the target project root, use in-place mode:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Flow-Research/flow-harness/main/install.sh | bash -s -- --here
+curl -fsSL https://raw.githubusercontent.com/Flow-Research/harnessy/main/install.sh | bash -s -- --here
 ```
 
 This mode:
 
 - treats the current directory as the install target
 - installs `jarvis`
-- fetches or updates a cached `flow-harness` checkout used as installer source
+- fetches or updates a cached `harnessy` checkout used as installer source
 - prompts once per file type for install destinations unless `--yes` is used
 - patches the current repository with a minimal `AGENTS.md` pointer block, the context vault, memory scopes, project-local lifecycle scripts, and package scripts
 - skips community skill installation by default for a lean existing-project install
@@ -110,27 +110,27 @@ This mode:
 You can also target another repo explicitly:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Flow-Research/flow-harness/main/install.sh | bash -s -- --target "/path/to/project"
+curl -fsSL https://raw.githubusercontent.com/Flow-Research/harnessy/main/install.sh | bash -s -- --target "/path/to/project"
 ```
 
 If you want to rerun the destination prompts for a repo that already has `flow-install.lock.json`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Flow-Research/flow-harness/main/install.sh | bash -s -- --here --reconfigure
+curl -fsSL https://raw.githubusercontent.com/Flow-Research/harnessy/main/install.sh | bash -s -- --here --reconfigure
 ```
 
 Local equivalent:
 
 ```bash
-node /path/to/flow-harness/tools/flow-install/index.mjs --yes --target /path/to/project
+node /path/to/harnessy/tools/flow-install/index.mjs --yes --target /path/to/project
 ```
 
 Or after cloning this repo locally and running from the project root:
 
 ```bash
-git clone https://github.com/Flow-Research/flow-harness.git
+git clone https://github.com/Flow-Research/harnessy.git
 cd /path/to/your-project
-node /path/to/flow-harness/tools/flow-install/index.mjs --yes
+node /path/to/harnessy/tools/flow-install/index.mjs --yes
 ```
 
 ## Local Development
@@ -178,7 +178,7 @@ jarvis --help
 Install paths:
 
 - local workspace: `uv tool install --force ./Jarvis`
-- GitHub: `uv tool install --force "git+https://github.com/Flow-Research/flow-harness.git#subdirectory=Jarvis"`
+- GitHub: `uv tool install --force "git+https://github.com/Flow-Research/harnessy.git#subdirectory=Jarvis"`
 
 Jarvis currently provides task planning, journaling, reading-list workflows, context operations, and Android APK tooling.
 
@@ -299,7 +299,7 @@ Recommended team workflow:
 1. From the target repo root, install Flow in place:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Flow-Research/flow-harness/main/install.sh | bash -s -- --here
+curl -fsSL https://raw.githubusercontent.com/Flow-Research/harnessy/main/install.sh | bash -s -- --here
 ```
 
 2. Commit generated files:
@@ -332,7 +332,7 @@ node tools/flow-install/index.mjs --update-context-agents
 4. Install Jarvis if they want the local CLI:
 
 ```bash
-uv tool install --force "git+https://github.com/Flow-Research/flow-harness.git#subdirectory=Jarvis"
+uv tool install --force "git+https://github.com/Flow-Research/harnessy.git#subdirectory=Jarvis"
 ```
 
 ## Installation Validation
@@ -348,7 +348,7 @@ That means the installation model is no longer theoretical; it has been exercise
 Install or reinstall it:
 
 ```bash
-uv tool install --force "git+https://github.com/Flow-Research/flow-harness.git#subdirectory=Jarvis"
+uv tool install --force "git+https://github.com/Flow-Research/harnessy.git#subdirectory=Jarvis"
 ```
 
 ### `pnpm skills:register` does nothing
@@ -366,7 +366,7 @@ jarvis android avds
 ### Re-run installation into a repo
 
 ```bash
-node /path/to/flow-harness/tools/flow-install/index.mjs --yes
+node /path/to/harnessy/tools/flow-install/index.mjs --yes
 ```
 
 It is designed to be re-runnable and skip already-current parts.

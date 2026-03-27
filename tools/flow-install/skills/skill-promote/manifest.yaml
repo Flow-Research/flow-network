@@ -1,0 +1,21 @@
+name: skill-promote
+type: opencode
+version: 0.1.0
+owner: julian
+status: experimental
+blast_radius: medium
+description: "Promote improvements from the installed skill copy back to the Flow repo source, with evidence-backed commit messages."
+permissions: [read, write]
+data_categories: [none]
+egress: []
+invoke: /skill-promote
+location: tools/flow-install/skills/skill-promote
+dependencies:
+  - tool: git
+    description: "Git version control"
+    check: "git --version"
+    required: true
+  - tool: python3
+    description: "Python 3 for version comparison"
+    check: "python3 --version"
+    required: true

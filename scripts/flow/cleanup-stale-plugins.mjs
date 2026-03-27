@@ -10,11 +10,11 @@ import path from "node:path";
 
 const dryRun = process.argv.includes("--dry-run");
 const HOME = os.homedir();
-const PLUGIN_ID = "flow-harness";
+const PLUGIN_ID = "harnessy";
 const GLOBAL_SKILLS_DIR = path.join(HOME, ".agents", "skills");
 const GLOBAL_CLAUDE_MARKETPLACE = path.join(HOME, ".agents", "claude-marketplace");
 const GLOBAL_CLAUDE_INSTALLED_PLUGINS = path.join(HOME, ".claude", "plugins", "installed_plugins.json");
-const GLOBAL_CLAUDE_PLUGIN_CACHE = path.join(HOME, ".claude", "plugins", "cache", "flow_harness");
+const GLOBAL_CLAUDE_PLUGIN_CACHE = path.join(HOME, ".claude", "plugins", "cache", "harnessy");
 
 const readFileSafe = async (p) => { try { return await fs.readFile(p, "utf8"); } catch (e) { if (e.code === "ENOENT") return null; throw e; } };
 const readJsonSafe = async (p) => { const raw = await readFileSafe(p); if (!raw) return null; try { return JSON.parse(raw); } catch { return null; } };
@@ -56,12 +56,12 @@ const main = async () => {
     skills.push({ name: entry.name, skillDir });
   }
 
-  const bundledKey = PLUGIN_ID + "@flow_harness";
+  const bundledKey = PLUGIN_ID + "@harnessy";
 
   // 1. installed_plugins.json
   const installed = await readJsonSafe(GLOBAL_CLAUDE_INSTALLED_PLUGINS);
   if (installed?.plugins) {
-    const staleKeys = Object.keys(installed.plugins).filter(k => k.endsWith("@flow_harness") && k !== bundledKey);
+    const staleKeys = Object.keys(installed.plugins).filter(k => k.endsWith("@harnessy") && k !== bundledKey);
     if (staleKeys.length > 0) {
       if (dryRun) { console.log("  Would remove " + staleKeys.length + " stale entries from installed_plugins.json"); }
       else { for (const k of staleKeys) delete installed.plugins[k]; await writeJson(GLOBAL_CLAUDE_INSTALLED_PLUGINS, installed); console.log("  Removed " + staleKeys.length + " stale entries from installed_plugins.json"); }

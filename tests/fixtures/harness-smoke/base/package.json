@@ -1,5 +1,5 @@
 {
-  "name": "flow-harness-fixture-base",
+  "name": "harnessy-fixture-base",
   "private": true,
   "scripts": {}
 }
