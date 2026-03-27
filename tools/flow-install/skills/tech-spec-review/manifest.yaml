@@ -10,3 +10,11 @@ data_categories: [pii]
 egress: []
 invoke: "/tech-spec-review"
 location: tools/flow-install/skills/tech-spec-review
+traces:
+  enabled: true
+  gates:
+    quality:
+      - simplicity_gate
+      - architecture_fitness
+    human:
+      - review_approval

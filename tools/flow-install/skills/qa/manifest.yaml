@@ -10,3 +10,5 @@ data_categories: [pii]
 egress: []
 invoke: "/qa"
 location: tools/flow-install/skills/qa
+traces:
+  enabled: true

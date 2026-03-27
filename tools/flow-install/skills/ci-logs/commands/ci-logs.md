@@ -23,3 +23,14 @@ description: Download and summarize GitHub Actions workflow logs for a run.
 
 - This skill is GitHub Actions-specific by design.
 - If no failed jobs exist under `--failed-only`, return a clear no-failures result instead of guessing.
+
+## Feedback Capture
+
+After completion, ask the user: **"Any feedback on this run? (skip to finish)"**
+If provided, capture it:
+```bash
+python3 "${AGENTS_SKILLS_ROOT}/_shared/trace_capture.py" capture \
+    --skill "ci-logs" --gate "run_retrospective" --gate-type "retrospective" \
+    --outcome "approved" --feedback "<user's feedback>"
+```
+

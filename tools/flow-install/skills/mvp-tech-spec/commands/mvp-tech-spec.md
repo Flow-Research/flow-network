@@ -194,3 +194,14 @@ Write `MVP_technical_spec.md` using the template and produce summary report.
 | **Sequence for value** | Earliest work items unlock core user value |
 | **Be honest about effort** | Underestimating kills MVPs |
 | **Trace everything** | Every work item connects to MVP scope and full spec |
+
+## Feedback Capture
+
+After completion, ask the user: **"Any feedback on this run? (skip to finish)"**
+If provided, capture it:
+```bash
+python3 "${AGENTS_SKILLS_ROOT}/_shared/trace_capture.py" capture \
+    --skill "mvp-tech-spec" --gate "run_retrospective" --gate-type "retrospective" \
+    --outcome "approved" --feedback "<user's feedback>"
+```
+

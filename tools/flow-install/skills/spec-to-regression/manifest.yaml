@@ -10,3 +10,9 @@ data_categories: [none]
 egress: []
 invoke: /spec-to-regression
 location: tools/flow-install/skills/spec-to-regression
+traces:
+  enabled: true
+  gates:
+    quality:
+      - coverage_completeness
+      - scenario_generation

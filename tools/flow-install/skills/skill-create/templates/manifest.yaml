@@ -11,3 +11,10 @@ data_categories: [<pii|financial|credentials|none>]
 egress: [<allowed outbound destinations>]
 invoke: "/<skill-name>"
 location: <.agents/<type>/<skill-name>|tools/flow-install/<type>/<skill-name>>
+# Optional: enable decision trace capture for skill evolution.
+# Add specific gate names if the skill has review/quality gates.
+# traces:
+#   enabled: true
+#   gates:
+#     quality: [<gate_name>, ...]
+#     human: [<gate_name>, ...]

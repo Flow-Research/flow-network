@@ -10,3 +10,5 @@ data_categories: [pii]
 egress: []
 invoke: "/tech-spec"
 location: tools/flow-install/skills/tech-spec
+traces:
+  enabled: true

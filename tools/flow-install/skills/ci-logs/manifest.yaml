@@ -10,3 +10,5 @@ data_categories: [none]
 egress: [api.github.com, github.com]
 invoke: "/ci-logs"
 location: tools/flow-install/skills/ci-logs
+traces:
+  enabled: true

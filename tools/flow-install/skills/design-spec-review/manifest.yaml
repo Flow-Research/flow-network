@@ -10,3 +10,12 @@ data_categories: [none]
 egress: []
 invoke: "/design-spec-review"
 location: tools/flow-install/skills/design-spec-review
+traces:
+  enabled: true
+  gates:
+    quality:
+      - ux_completeness
+      - accessibility_compliance
+      - implementability
+    human:
+      - review_approval

@@ -10,3 +10,5 @@ data_categories: [pii]
 egress: []
 invoke: "/prd"
 location: tools/flow-install/skills/prd
+traces:
+  enabled: true

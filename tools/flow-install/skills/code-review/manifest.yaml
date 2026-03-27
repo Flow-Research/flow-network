@@ -10,3 +10,12 @@ data_categories: [pii]
 egress: []
 invoke: "/code-review"
 location: tools/flow-install/skills/code-review
+traces:
+  enabled: true
+  gates:
+    quality:
+      - simplicity_gate
+      - correctness_gate
+      - architecture_gate
+    human:
+      - review_approval

@@ -10,3 +10,10 @@ data_categories: [none]
 egress: []
 invoke: /test-quality-validator
 location: tools/flow-install/skills/test-quality-validator
+traces:
+  enabled: true
+  gates:
+    quality:
+      - coverage_gate
+      - false_green_gate
+      - pattern_gate

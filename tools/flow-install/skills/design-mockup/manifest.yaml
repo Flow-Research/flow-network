@@ -10,3 +10,11 @@ data_categories: []
 egress: []
 invoke: "/design-mockup"
 location: tools/flow-install/skills/design-mockup
+traces:
+  enabled: true
+  gates:
+    quality:
+      - framework_detection
+      - spec_parsing
+    human:
+      - mockup_review

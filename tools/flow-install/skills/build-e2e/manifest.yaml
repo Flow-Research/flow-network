@@ -34,3 +34,14 @@ checkpoints:
 tests:
   smoke: true
   staging: true
+traces:
+  enabled: true
+  gates:
+    quality:
+      - brainstorm_review
+      - prd_review
+      - tech_spec_review
+      - mvp_spec_review
+      - qa_review
+    human:
+      - checkpoint_approval

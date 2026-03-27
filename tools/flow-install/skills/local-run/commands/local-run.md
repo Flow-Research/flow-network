@@ -25,3 +25,14 @@ description: Analyze a repository for local run options and update Docker/README
 ## Notes
 
 - The templates are generic scaffolds, not a substitute for repo-specific verification.
+
+## Feedback Capture
+
+After completion, ask the user: **"Any feedback on this run? (skip to finish)"**
+If provided, capture it:
+```bash
+python3 "${AGENTS_SKILLS_ROOT}/_shared/trace_capture.py" capture \
+    --skill "local-run" --gate "run_retrospective" --gate-type "retrospective" \
+    --outcome "approved" --feedback "<user's feedback>"
+```
+

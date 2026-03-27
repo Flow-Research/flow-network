@@ -10,6 +10,8 @@ data_categories: [none]
 egress: []
 invoke: "/git-commit"
 location: tools/flow-install/skills/git-commit
+traces:
+  enabled: true
 dependencies:
   - tool: git
     description: "Git version control"

@@ -10,3 +10,11 @@ data_categories: [pii]
 egress: []
 invoke: "/prd-spec-review"
 location: tools/flow-install/skills/prd-spec-review
+traces:
+  enabled: true
+  gates:
+    quality:
+      - spec_completeness
+      - criteria_testability
+    human:
+      - review_approval

@@ -190,3 +190,14 @@ Stop discovery and move to documentation when ANY of these are true:
 | User changes direction mid-session | "Got it, let's pivot. Tell me more about this new direction." |
 | User is unsure about everything | "That's completely fine. Let's start with what drew you to this idea in the first place." |
 | User wants to end early | Summarize what was discussed and offer to save partial notes |
+
+## Feedback Capture
+
+After completion, ask the user: **"Any feedback on this run? (skip to finish)"**
+If provided, capture it:
+```bash
+python3 "${AGENTS_SKILLS_ROOT}/_shared/trace_capture.py" capture \
+    --skill "brainstorm" --gate "run_retrospective" --gate-type "retrospective" \
+    --outcome "approved" --feedback "<user's feedback>"
+```
+

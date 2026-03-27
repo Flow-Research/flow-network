@@ -10,3 +10,5 @@ data_categories: [none]
 egress: []
 invoke: "/semver"
 location: tools/flow-install/skills/semver
+traces:
+  enabled: true

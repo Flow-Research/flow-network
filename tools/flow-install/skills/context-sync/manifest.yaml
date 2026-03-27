@@ -10,6 +10,15 @@ data_categories: [credentials]
 egress: [github.com, api.github.com]
 invoke: "/context-sync"
 location: tools/flow-install/skills/context-sync
+traces:
+  enabled: true
+  gates:
+    quality:
+      - verification_check
+      - conflict_detection
+    human:
+      - conflict_resolution
+      - pr_approval
 dependencies:
   - tool: gh
     description: "GitHub CLI for PR operations"

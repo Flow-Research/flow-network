@@ -10,3 +10,11 @@ data_categories: [none]
 egress: []
 invoke: /skill-improve
 location: tools/flow-install/skills/skill-improve
+traces:
+  enabled: true
+  gates:
+    quality:
+      - trace_analysis
+      - proposal_generation
+    human:
+      - improvement_approval

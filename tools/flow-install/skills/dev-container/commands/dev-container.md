@@ -122,3 +122,14 @@ When the baseline install set changes, update all three layers together:
 1. package manifests (`baseline/` or `features/`)
 2. validation spec (`specs/`)
 3. documentation (`README.md`)
+
+## Feedback Capture
+
+After completion, ask the user: **"Any feedback on this run? (skip to finish)"**
+If provided, capture it:
+```bash
+python3 "${AGENTS_SKILLS_ROOT}/_shared/trace_capture.py" capture \
+    --skill "dev-container" --gate "run_retrospective" --gate-type "retrospective" \
+    --outcome "approved" --feedback "<user's feedback>"
+```
+
