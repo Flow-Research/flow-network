@@ -1,0 +1,12 @@
+name: design-mockup
+type: opencode
+version: 0.1.0
+owner: julian
+status: experimental
+blast_radius: medium
+description: "Generate a working UI prototype from design spec and tech spec with dummy data for visual validation before full implementation."
+permissions: [write]
+data_categories: []
+egress: []
+invoke: "/design-mockup"
+location: tools/flow-install/skills/design-mockup
