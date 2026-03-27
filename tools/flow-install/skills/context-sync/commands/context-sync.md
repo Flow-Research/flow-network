@@ -447,6 +447,40 @@ If the branch-sync step conflicts:
 
 **Safety rule**: Steps 2 (stash), 3 (sync), and 4 (restore) must each be executed as separate operations. Never chain them in a single command — if sync fails after stashing, the stash must be restored before reporting the error.
 
+### Step 3b: Rebase against target branch
+
+After syncing with the remote working branch, rebase onto the target branch to ensure the eventual PR will be conflict-free:
+
+```bash
+git fetch "$TARGET_REMOTE" "$TARGET_BRANCH"
+git rebase "$TARGET_REMOTE/$TARGET_BRANCH"
+```
+
+If the rebase succeeds, the branch is now ahead of the target branch with no conflicts. Continue to Step 4.
+
+If the rebase conflicts:
+
+1. Check if ALL conflicting files are `.issue-flow-state.json` AND `ISSUE_FLOW_CONTEXT.active` is true:
+   - Resolve with `--ours` (keep local state — issue-flow reconciliation will handle it automatically):
+     ```bash
+     git checkout --ours <conflicting-state-files>
+     git add <conflicting-state-files>
+     git rebase --continue
+     ```
+   - Repeat for each rebase step that conflicts on state files only.
+
+2. For any other conflicting files:
+   - If the file was only added on the target branch (not modified locally), accept theirs:
+     ```bash
+     git checkout --theirs <file>
+     git add <file>
+     git rebase --continue
+     ```
+   - If the file was modified on both sides, attempt auto-merge resolution. If git can resolve the markers automatically, stage and continue.
+   - If any file cannot be resolved automatically, abort the rebase, restore the stash if one was created, and stop with recovery guidance explaining which files conflict and what the user should do.
+
+If the target branch does not exist on the remote (e.g., `dev` was specified but doesn't exist), skip this step.
+
 ### Step 4: Restore the stash if one was created
 
 Restore it only after the branch-sync step succeeds:
@@ -636,7 +670,14 @@ gh pr view -R "$PR_REPO" <number> --json number,url,state,mergeStateStatus,revie
 - `mechanical_ci_failure`: create or resume a fix task, apply the fix, rerun full local verification, push, then loop
 - `waiting_for_review`: keep watching until review changes state or an SLA threshold is hit; do not spam commits
 - `requested_changes_ambiguous`: escalate safely
-- `merge_conflict`: attempt a safe rebase only if the conflict is absent; otherwise escalate
+- `merge_conflict`: rebase the working branch onto the target branch to resolve:
+  1. Fetch the latest target branch: `git fetch origin <TARGET_BRANCH>`
+  2. Rebase: `git rebase origin/<TARGET_BRANCH>`
+  3. If rebase conflicts on `.issue-flow-state.json` only and issue-flow context is active: resolve with `--ours`, continue rebase
+  4. If rebase conflicts on other files: attempt auto-merge. If any file cannot be resolved, abort rebase and escalate with `unsafe_change_required`
+  5. After successful rebase, run full local verification, then force-push with lease: `git push --force-with-lease origin <branch>`
+  6. Loop back to check PR state
+  7. This counts against the autonomous retry budget
 - `ready_to_merge`: report that the PR is green and ready to merge. Do NOT merge. Do NOT ask the user if they want to merge. Stop the loop and report readiness.
 - `closed`: stop and mark `closed_by_user`
 
