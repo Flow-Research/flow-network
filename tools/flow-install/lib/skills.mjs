@@ -180,13 +180,40 @@ export const installSkills = async (flowInstallRoot, { dryRun = false } = {}) =>
       const cmp = compareSemver(skill.version, existing.version || "0.0.0");
 
       if (cmp <= 0) {
+        // Check for unpromoted improvements (installed version ahead of source)
+        const installedAhead = compareSemver(existing.version || "0.0.0", skill.version) > 0;
+        if (installedAhead) {
+          const improvementsFile = path.join(homeDir, ".agents", "traces", skill.name, "improvements.ndjson");
+          const improvementsContent = await readFileSafe(improvementsFile);
+          if (improvementsContent) {
+            const unpromoted = improvementsContent.split("\n").filter(l => {
+              if (!l.trim()) return false;
+              try { const r = JSON.parse(l); return r.improvement_id && !r.type; } catch { return false; }
+            }).length;
+            if (unpromoted > 0) {
+              log.warn(`${skill.name}: installed v${existing.version} has ${unpromoted} unpromoted improvement(s) vs source v${skill.version}. Run /skill-promote ${skill.name} before upgrading source.`);
+            }
+          }
+        }
         log.skip(`${skill.name} (${existing.version || "unknown"} >= ${skill.version})`);
         skipped++;
         commandShims += await installSkillExecutables(targetDir, { dryRun });
         continue;
       }
 
-      // Upgrade
+      // Upgrade — but warn if installed had improvements that will be overwritten
+      const improvementsFile = path.join(homeDir, ".agents", "traces", skill.name, "improvements.ndjson");
+      const improvementsContent = await readFileSafe(improvementsFile);
+      if (improvementsContent) {
+        const unpromoted = improvementsContent.split("\n").filter(l => {
+          if (!l.trim()) return false;
+          try { const r = JSON.parse(l); return r.improvement_id && !r.type; } catch { return false; }
+        }).length;
+        if (unpromoted > 0) {
+          log.warn(`${skill.name}: overwriting installed v${existing.version} (${unpromoted} unpromoted improvement(s)) with source v${skill.version}. Improvements may be lost. Consider /skill-promote first.`);
+        }
+      }
+
       if (dryRun) {
         log.dryRun(`Would upgrade ${skill.name}: ${existing.version} -> ${skill.version}`);
         upgraded++;

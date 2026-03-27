@@ -1,0 +1,12 @@
+name: skill-feedback
+type: opencode
+version: 0.1.0
+owner: julian
+status: experimental
+blast_radius: low
+description: "Capture ad-hoc feedback about any skill's behavior, storing it as a decision trace for the skill evolution system."
+permissions: [write]
+data_categories: [none]
+egress: []
+invoke: /skill-feedback
+location: tools/flow-install/skills/skill-feedback
