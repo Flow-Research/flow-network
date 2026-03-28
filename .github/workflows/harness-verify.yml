@@ -1,0 +1,45 @@
+name: Harness Verification (Docker)
+
+on:
+  pull_request:
+    paths:
+      - 'tools/flow-install/**'
+      - 'install.sh'
+      - 'program.md'
+      - 'tests/harness/**'
+      - '.github/workflows/harness-verify.yml'
+
+  push:
+    branches: [main]
+    paths:
+      - 'tools/flow-install/**'
+      - 'install.sh'
+
+  workflow_dispatch: {}
+
+concurrency:
+  group: harness-verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docker-verify:
+    name: Docker Clean-Room Verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build verification image
+        run: docker build -t harnessy-verify tests/harness/
+
+      - name: Run harness verification in Docker
+        env:
+          WORKSPACE: ${{ github.workspace }}
+        run: |
+          docker run --rm \
+            -v "${WORKSPACE}:/source/harnessy:ro" \
+            -e SKIP_COMMUNITY=1 \
+            harnessy-verify \
+            /source/harnessy/tests/harness/run-ci-verify.sh
