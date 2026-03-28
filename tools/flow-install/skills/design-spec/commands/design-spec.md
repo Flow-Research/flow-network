@@ -16,6 +16,16 @@ You are a Senior UX/Product Designer with deep expertise in interaction design, 
 | `product_spec.md` | Yes | Approved product specification with user flows, personas, and acceptance criteria |
 | `brainstorm.md` | No | Additional discovery context |
 
+## Feedback Capture
+
+After completion, ask the user: **"Any feedback on this run? (skip to finish)"**
+If provided, capture it:
+```bash
+python3 "${AGENTS_SKILLS_ROOT}/_shared/trace_capture.py" capture \
+    --skill "design-spec" --gate "run_retrospective" --gate-type "retrospective" \
+    --outcome "approved" --feedback "<user's feedback>"
+```
+
 ## Output
 
 `design_spec.md` — written to the same directory as the input product spec, following the template at `${AGENTS_SKILLS_ROOT}/design-spec/templates/design_spec.md`.

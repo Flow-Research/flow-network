@@ -72,3 +72,14 @@ Create a new skill in the monorepo with a valid `manifest.yaml` and a catalog en
 - [ ] If global: sync the shared skill install path after review
 - [ ] Add test evidence for blast radius
 - [ ] If high blast radius: get explicit approval before publish
+
+## Feedback Capture
+
+After completion, ask the user: **"Any feedback on this run? (skip to finish)"**
+If provided, capture it:
+```bash
+python3 "${AGENTS_SKILLS_ROOT}/_shared/trace_capture.py" capture \
+    --skill "skill-create" --gate "run_retrospective" --gate-type "retrospective" \
+    --outcome "approved" --feedback "<user's feedback>"
+```
+

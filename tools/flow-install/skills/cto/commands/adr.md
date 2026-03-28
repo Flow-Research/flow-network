@@ -157,3 +157,13 @@ Proposed → Approved → [Implemented]
 3. **Explain the "why"** - Rationale is the most valuable part
 4. **Accept uncertainty** - It's okay to note risks and unknowns
 5. **Keep it brief** - 1-2 pages max, link to detailed docs
+
+## Feedback Capture
+
+After completion, ask the user: **"Any feedback on this run? (skip to finish)"**
+If provided, capture it:
+```bash
+python3 "${AGENTS_SKILLS_ROOT}/_shared/trace_capture.py" capture \
+    --skill "cto" --gate "run_retrospective" --gate-type "retrospective" \
+    --outcome "approved" --feedback "<user's feedback>"
+```

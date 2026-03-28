@@ -1,0 +1,116 @@
+name: Autoflow — Autonomous Issue Processing
+
+on:
+  # Trigger when an issue is labeled 'autoflow'
+  issues:
+    types: [labeled]
+
+  # Scheduled run (every 6 hours)
+  schedule:
+    - cron: '0 */6 * * *'
+
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Specific issue number to process (optional)'
+        required: false
+        type: string
+      max_issues:
+        description: 'Maximum issues to process in this run'
+        required: false
+        default: '5'
+        type: string
+
+concurrency:
+  group: autoflow-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  autoflow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    # Only run on label trigger if the label is 'autoflow'
+    if: >
+      github.event_name != 'issues' ||
+      github.event.label.name == 'autoflow'
+
+    permissions:
+      issues: write
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify program.md exists
+        run: |
+          if [ ! -f program.md ]; then
+            echo "::error::No program.md found at repository root. Cannot run autoflow."
+            exit 1
+          fi
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Cache Flow harness
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/harnessy
+          key: harnessy-${{ runner.os }}-${{ hashFiles('tools/flow-install/**') }}
+
+      - name: Install Flow
+        run: |
+          bash install.sh --here --yes 2>&1 || true
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Run autoflow
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AUTOFLOW_MODE: ci
+          AUTOFLOW_MAX_ISSUES: ${{ github.event.inputs.max_issues || '5' }}
+          AUTOFLOW_ISSUE: ${{ github.event.inputs.issue_number || '' }}
+        run: |
+          echo "Starting autoflow in CI mode"
+          echo "Max issues: ${AUTOFLOW_MAX_ISSUES}"
+
+          # In CI mode, autoflow runs non-interactively:
+          # - Human gates pause and comment on the issue for review
+          # - Improvements require explicit approval (flagged for review)
+          # - Results are pushed back to the repo
+
+          # For now, this validates the setup and reports readiness.
+          # Full autonomous execution requires an agent runtime in CI
+          # (e.g., Claude Code CLI with API key).
+
+          echo "=== Program Configuration ==="
+          head -20 program.md
+
+          echo ""
+          echo "=== Eligible Issues ==="
+          gh issue list --label autoflow --state open --json number,title 2>/dev/null || echo "No issues found"
+
+          echo ""
+          echo "=== Current Metrics ==="
+          python3 tools/flow-install/skills/_shared/run_metrics.py compute --skill issue-flow 2>/dev/null || echo "No traces yet"
+
+      - name: Push trace results
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "autoflow[bot]"
+          git config user.email "autoflow@flowresearch.dev"
+          echo "Trace push placeholder — production mode will commit trace results"

@@ -1,0 +1,38 @@
+name: autoflow
+type: opencode
+version: 0.1.0
+owner: julian
+status: experimental
+blast_radius: high
+description: "Autonomous issue-flow runner: processes GitHub issues, captures quality metrics, triggers skill self-improvement, and measures impact. The autoresearch pattern applied to software delivery."
+permissions: [read-issues, read-projects, write-specs, write-state, write-reports, run-tests, run-validation, create-pr]
+data_categories: [none]
+egress: [api.github.com, github.com]
+invoke: /autoflow
+location: tools/flow-install/skills/autoflow
+traces:
+  enabled: true
+  gates:
+    quality:
+      - issue_selection
+      - run_completion
+      - metrics_evaluation
+      - improvement_trigger
+      - keep_discard_decision
+    human:
+      - escalation_review
+      - improvement_approval
+dependencies:
+  - tool: gh
+    description: "GitHub CLI for issue queries"
+    check: "gh --version"
+    auth_check: "gh auth status"
+    required: true
+  - tool: git
+    description: "Git version control"
+    check: "git --version"
+    required: true
+  - tool: python3
+    description: "Python 3 for metrics and state scripts"
+    check: "python3 --version"
+    required: true

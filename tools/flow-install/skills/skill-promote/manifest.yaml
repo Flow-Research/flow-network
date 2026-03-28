@@ -10,6 +10,14 @@ data_categories: [none]
 egress: []
 invoke: /skill-promote
 location: tools/flow-install/skills/skill-promote
+traces:
+  enabled: true
+  gates:
+    quality:
+      - version_comparison
+      - diff_review
+    human:
+      - promotion_approval
 dependencies:
   - tool: git
     description: "Git version control"

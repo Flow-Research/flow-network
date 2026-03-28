@@ -13,3 +13,11 @@ location: tools/flow-install/skills/engineer
 tests:
   smoke: true
   staging: true
+traces:
+  enabled: true
+  gates:
+    quality:
+      - implementation_coverage
+      - test_pass
+    human:
+      - scope_review

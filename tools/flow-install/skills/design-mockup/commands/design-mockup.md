@@ -193,6 +193,40 @@ To view different component states (loading, error, empty), [describe toggles or
 - This mockup is not production code. It will be replaced by the full implementation.
 ```
 
+## Decision Trace Protocol
+
+This skill participates in the skill evolution system by capturing decision traces at gate resolutions and consulting accumulated feedback.
+
+### Trace Consultation (short loop)
+
+Before executing any step with a quality or human gate, query accumulated decision traces:
+
+```bash
+python3 "${AGENTS_SKILLS_ROOT}/_shared/trace_query.py" recent \
+    --skill "design-mockup" --gate "<gate_name>" --limit 5 --min-loops 1
+```
+
+If patterns or recent feedback exist, incorporate them as additional constraints. Do not cite traces to the user unless asked.
+
+### Trace Capture (after gate resolution)
+
+After every gate resolves, capture a decision trace:
+
+```bash
+python3 "${AGENTS_SKILLS_ROOT}/_shared/trace_capture.py" capture \
+    --skill "design-mockup" \
+    --gate "<gate_name>" --gate-type "<human|quality>" \
+    --outcome "<approved|rejected|passed|failed>" \
+    --refinement-loops <N> \
+    [--feedback "<user's feedback text>"] \
+    [--category <CATEGORY>]
+```
+
+### Post-Run Retrospective
+
+After completion, ask: **"Any feedback on this design-mockup run? (skip to finish)"**
+If provided, capture via trace_capture.py with gate "run_retrospective" and gate-type "retrospective".
+
 ## Output
 
 All files in the `mockup/` directory (or under the mockup route prefix if integrated), ready for the issue-flow Artifact Commit-and-Link procedure.

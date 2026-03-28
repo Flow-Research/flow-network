@@ -10,3 +10,9 @@ data_categories: [none]
 egress: []
 invoke: /api-integration-codegen
 location: tools/flow-install/skills/api-integration-codegen
+traces:
+  enabled: true
+  gates:
+    quality:
+      - generation_completeness
+      - adapter_coverage

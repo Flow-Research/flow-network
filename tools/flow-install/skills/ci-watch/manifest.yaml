@@ -10,3 +10,5 @@ data_categories: [none]
 egress: [api.github.com, github.com]
 invoke: "/ci-watch"
 location: tools/flow-install/skills/ci-watch
+traces:
+  enabled: true

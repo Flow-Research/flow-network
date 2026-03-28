@@ -10,3 +10,6 @@ data_categories: [pii]
 egress: []
 invoke: "/cto"
 location: tools/flow-install/skills/cto
+
+traces:
+  enabled: true

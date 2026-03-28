@@ -456,3 +456,13 @@ If no arguments provided AND plugin is configured, show:
 | Invalid option | "Invalid option for this command. Available options: [list from docs]" |
 | API key missing | "ANTHROPIC_API_KEY not set. AI features require this environment variable." |
 | Template path not found | "Could not find context templates at {jarvis_root}/context/. Please verify your Jarvis root path." |
+
+## Feedback Capture
+
+After completion, ask the user: **"Any feedback on this run? (skip to finish)"**
+If provided, capture it:
+```bash
+python3 "${AGENTS_SKILLS_ROOT}/_shared/trace_capture.py" capture \
+    --skill "jarvis" --gate "run_retrospective" --gate-type "retrospective" \
+    --outcome "approved" --feedback "<user's feedback>"
+```

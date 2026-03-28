@@ -10,3 +10,6 @@ data_categories: [credentials]
 egress: [api.anthropic.com]
 invoke: "/jarvis"
 location: tools/flow-install/skills/jarvis
+
+traces:
+  enabled: true

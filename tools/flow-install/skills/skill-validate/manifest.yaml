@@ -10,3 +10,10 @@ data_categories: ["none"]
 egress: []
 invoke: "/skill-validate"
 location: tools/flow-install/skills/skill-validate
+traces:
+  enabled: true
+  gates:
+    quality:
+      - manifest_check
+      - catalog_check
+      - blast_radius_gate

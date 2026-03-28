@@ -10,3 +10,10 @@ data_categories: ["none"]
 egress: []
 invoke: "/skill-publish"
 location: tools/flow-install/skills/skill-publish
+traces:
+  enabled: true
+  gates:
+    quality:
+      - validation_gate
+    human:
+      - approval_gate

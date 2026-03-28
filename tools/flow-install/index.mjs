@@ -21,7 +21,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { log, readJsonSafe, writeJson } from "./lib/utils.mjs";
+import { log, readJsonSafe, writeJson, pathExists, ensureDir, promptConfirm } from "./lib/utils.mjs";
 import { detectProject } from "./lib/detect.mjs";
 import { installSkills, registerClaudeSkills, registerOpenCodeSkills } from "./lib/skills.mjs";
 import { installProjectScripts, installScripts, patchPackageJson } from "./lib/scripts.mjs";
@@ -32,7 +32,7 @@ import { mergeAgentsMd } from "./lib/agents-md.mjs";
 import { resolveInstallPaths } from "./lib/install-paths.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const TOTAL_STEPS = 8;
+const TOTAL_STEPS = 9;
 
 const collectFlowCoreSkillNames = async () => {
   const skillsDir = path.join(__dirname, "skills");
@@ -199,6 +199,61 @@ const main = async () => {
     });
   }
 
+  // ── Step 9: Autoflow CI setup (optional) ────────────────────────────────
+  let autoflowInstalled = projectInfo.existing.lockfile?.components?.autoflow ?? null;
+  if (runAll && !dryRun) {
+    log.step(9, TOTAL_STEPS, "Autoflow CI setup");
+    const alreadyInstalled = autoflowInstalled === true;
+    const previouslyDeclined = autoflowInstalled === false;
+
+    if (alreadyInstalled && !reconfigure) {
+      // Previously accepted — silently update templates (supports flow:sync with --yes)
+      const templatesDir = path.join(__dirname, "templates");
+      const workflowTarget = path.join(projectRoot, ".github", "workflows", "autoflow.yml");
+      const templateSource = path.join(templatesDir, "autoflow.yml");
+      if (await pathExists(templateSource)) {
+        await ensureDir(path.join(projectRoot, ".github", "workflows"));
+        await fs.copyFile(templateSource, workflowTarget);
+      }
+      log.skip("Autoflow CI already installed (templates updated)");
+    } else if (previouslyDeclined && !reconfigure) {
+      log.skip("Autoflow CI previously declined (use --reconfigure to re-ask)");
+    } else if (yesAll) {
+      log.skip("Autoflow CI skipped in non-interactive mode (run flow-install --reconfigure to enable)");
+      if (autoflowInstalled === null) autoflowInstalled = false;
+    } else {
+      const wantAutoflow = await promptConfirm(
+        "Install autoflow GitHub Actions workflow? (enables autonomous issue processing)",
+        false,
+      );
+      if (wantAutoflow) {
+        const templatesDir = path.join(__dirname, "templates");
+        // Copy autoflow.yml
+        const workflowDir = path.join(projectRoot, ".github", "workflows");
+        await ensureDir(workflowDir);
+        await fs.copyFile(
+          path.join(templatesDir, "autoflow.yml"),
+          path.join(workflowDir, "autoflow.yml"),
+        );
+        log.ok("Installed .github/workflows/autoflow.yml");
+
+        // Copy program.md (only if not already present)
+        const programPath = path.join(projectRoot, "program.md");
+        if (!(await pathExists(programPath))) {
+          await fs.copyFile(path.join(templatesDir, "program.md"), programPath);
+          log.ok("Installed program.md (customize objectives and thresholds)");
+        } else {
+          log.skip("program.md already exists");
+        }
+
+        autoflowInstalled = true;
+      } else {
+        log.skip("Autoflow CI declined");
+        autoflowInstalled = false;
+      }
+    }
+  }
+
   // ── Write lockfile ──────────────────────────────────────────────────────
   if ((runAll || updateContextAgents) && !dryRun) {
     const flowCoreSkills = await collectFlowCoreSkillNames();
@@ -223,6 +278,7 @@ const main = async () => {
         context: true,
         memory: true,
         agentsMd: true,
+        ...(autoflowInstalled !== null ? { autoflow: autoflowInstalled } : {}),
       },
       flowCoreSkills,
       communitySkills: previousCommunitySkills,

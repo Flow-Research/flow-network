@@ -10,3 +10,5 @@ data_categories: [pii]
 egress: []
 invoke: "/brainstorm"
 location: tools/flow-install/skills/brainstorm
+traces:
+  enabled: true

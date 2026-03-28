@@ -10,3 +10,11 @@ data_categories: [none]
 egress: [api.github.com, github.com]
 invoke: "/ci-fix"
 location: tools/flow-install/skills/ci-fix
+traces:
+  enabled: true
+  gates:
+    quality:
+      - classification_gate
+      - fix_verification
+    human:
+      - escalation_decision

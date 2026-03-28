@@ -103,6 +103,16 @@ Generate summary report from existing test results.
 
 Re-run QA after engineer fixes bugs to verify resolution.
 
+## Feedback Capture
+
+After completion, ask the user: **"Any feedback on this run? (skip to finish)"**
+If provided, capture it:
+```bash
+python3 "${AGENTS_SKILLS_ROOT}/_shared/trace_capture.py" capture \
+    --skill "qa" --gate "run_retrospective" --gate-type "retrospective" \
+    --outcome "approved" --feedback "<user's feedback>"
+```
+
 ## Outputs
 
 All outputs go to the QA output folder. Location depends on context:

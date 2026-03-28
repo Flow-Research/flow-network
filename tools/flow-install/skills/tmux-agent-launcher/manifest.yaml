@@ -24,3 +24,6 @@ dependencies:
     description: "Python 3 for path resolution and JSON encoding"
     check: "python3 --version"
     required: true
+
+traces:
+  enabled: true

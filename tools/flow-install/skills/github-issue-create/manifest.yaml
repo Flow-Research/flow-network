@@ -10,3 +10,6 @@ data_categories: [pii]
 egress: [api.github.com, github.com]
 invoke: "/github-issue-create"
 location: tools/flow-install/skills/github-issue-create
+
+traces:
+  enabled: true

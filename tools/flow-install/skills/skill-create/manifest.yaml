@@ -10,3 +10,5 @@ data_categories: ["none"]
 egress: []
 invoke: "/skill-create"
 location: tools/flow-install/skills/skill-create
+traces:
+  enabled: true

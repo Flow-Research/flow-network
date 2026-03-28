@@ -10,3 +10,11 @@ data_categories: [credentials, pii]
 egress: []
 invoke: "/browser-qa"
 location: tools/flow-install/skills/browser-qa
+traces:
+  enabled: true
+  gates:
+    quality:
+      - playwright_readiness
+      - auth_verification
+    human:
+      - safety_mode_approval

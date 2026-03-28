@@ -10,3 +10,5 @@ data_categories: [credentials]
 egress: []
 invoke: "/local-run"
 location: tools/flow-install/skills/local-run
+traces:
+  enabled: true

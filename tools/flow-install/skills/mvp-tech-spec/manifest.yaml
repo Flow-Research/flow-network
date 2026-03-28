@@ -10,3 +10,5 @@ data_categories: [pii]
 egress: []
 invoke: "/mvp-tech-spec"
 location: tools/flow-install/skills/mvp-tech-spec
+traces:
+  enabled: true

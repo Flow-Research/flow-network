@@ -10,3 +10,9 @@ data_categories: [none]
 egress: []
 invoke: /browser-integration-codegen
 location: tools/flow-install/skills/browser-integration-codegen
+traces:
+  enabled: true
+  gates:
+    quality:
+      - selector_certainty
+      - todo_resolution

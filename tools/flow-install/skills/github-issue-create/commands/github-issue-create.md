@@ -20,3 +20,13 @@ description: Create a GitHub issue and optionally attach it to a GitHub Project 
 
 - Project-board placement is optional, not implicit.
 - Do not assume a repo-specific board title or a required `Backlog` column.
+
+## Feedback Capture
+
+After completion, ask the user: **"Any feedback on this run? (skip to finish)"**
+If provided, capture it:
+```bash
+python3 "${AGENTS_SKILLS_ROOT}/_shared/trace_capture.py" capture \
+    --skill "github-issue-create" --gate "run_retrospective" --gate-type "retrospective" \
+    --outcome "approved" --feedback "<user's feedback>"
+```

@@ -10,3 +10,5 @@ data_categories: ["none"]
 egress: ["docker.io", "ghcr.io"]
 invoke: "/dev-container"
 location: tools/flow-install/skills/dev-container
+traces:
+  enabled: true

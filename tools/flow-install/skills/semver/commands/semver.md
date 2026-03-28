@@ -139,3 +139,14 @@ If no arguments provided, show:
 1. Current version (if VERSION exists)
 2. Unreleased changes summary
 3. Available commands with examples
+
+## Feedback Capture
+
+After completion, ask the user: **"Any feedback on this run? (skip to finish)"**
+If provided, capture it:
+```bash
+python3 "${AGENTS_SKILLS_ROOT}/_shared/trace_capture.py" capture \
+    --skill "semver" --gate "run_retrospective" --gate-type "retrospective" \
+    --outcome "approved" --feedback "<user's feedback>"
+```
+
