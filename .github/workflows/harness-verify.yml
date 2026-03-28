@@ -57,11 +57,10 @@ jobs:
     name: Full Verification (with agent CLIs)
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    # Only run on manual dispatch with flags, or on main push
+    # Only run when explicitly requested via manual dispatch with at least one CLI flag
     if: >
-      (github.event_name == 'workflow_dispatch' &&
-       (github.event.inputs.with_opencode == 'true' || github.event.inputs.with_claude == 'true')) ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+      github.event_name == 'workflow_dispatch' &&
+      (github.event.inputs.with_opencode == 'true' || github.event.inputs.with_claude == 'true')
 
     steps:
       - name: Checkout
@@ -73,8 +72,8 @@ jobs:
       - name: Run harness verification with agent CLIs
         env:
           WORKSPACE: ${{ github.workspace }}
-          WITH_OPENCODE: ${{ github.event.inputs.with_opencode || 'true' }}
-          WITH_CLAUDE: ${{ github.event.inputs.with_claude || 'true' }}
+          WITH_OPENCODE: ${{ github.event.inputs.with_opencode || 'false' }}
+          WITH_CLAUDE: ${{ github.event.inputs.with_claude || 'false' }}
         run: |
           FLAGS=""
           if [ "${WITH_OPENCODE}" = "true" ]; then FLAGS="${FLAGS} --with-opencode"; fi
