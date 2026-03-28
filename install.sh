@@ -188,17 +188,17 @@ install_flow_framework() {
 
   # When running via curl | bash, stdin is the pipe not the terminal.
   # Redirect stdin from /dev/tty so interactive prompts work.
-  local stdin_redirect=""
+  local use_tty=0
   if [[ ! -t 0 ]] && [[ -e /dev/tty ]] && [[ "$FLOW_NONINTERACTIVE" != "1" ]]; then
-    stdin_redirect="</dev/tty"
+    use_tty=1
   fi
 
   if [[ "$INSTALL_MODE" == "in-place" ]]; then
     log "[info] Installing Flow framework into target repo: $TARGET_ROOT"
-    if ((${#flow_args[@]})); then
-      eval node "$FLOW_ROOT/tools/flow-install/index.mjs" "${flow_args[@]}" --target "$TARGET_ROOT" $stdin_redirect
+    if [[ "$use_tty" == "1" ]]; then
+      node "$FLOW_ROOT/tools/flow-install/index.mjs" "${flow_args[@]}" --target "$TARGET_ROOT" </dev/tty
     else
-      eval node "$FLOW_ROOT/tools/flow-install/index.mjs" --target "$TARGET_ROOT" $stdin_redirect
+      node "$FLOW_ROOT/tools/flow-install/index.mjs" "${flow_args[@]}" --target "$TARGET_ROOT"
     fi
     return
   fi
@@ -206,10 +206,10 @@ install_flow_framework() {
   log "[info] Installing Flow framework into project root"
   (
     cd "$FLOW_ROOT"
-    if ((${#flow_args[@]})); then
-      eval node tools/flow-install/index.mjs "${flow_args[@]}" $stdin_redirect
+    if [[ "$use_tty" == "1" ]]; then
+      node tools/flow-install/index.mjs "${flow_args[@]}" </dev/tty
     else
-      eval node tools/flow-install/index.mjs $stdin_redirect
+      node tools/flow-install/index.mjs "${flow_args[@]}"
     fi
   )
 }
