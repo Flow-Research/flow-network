@@ -7,24 +7,38 @@ set -euo pipefail
 # inside the container. No HTTP server needed — uses file:// protocol.
 #
 # Usage (from repo root):
-#   bash tests/harness/run-ci-verify.sh
+#   bash tests/harness/run-ci-verify.sh [--with-opencode] [--with-claude]
 #
-# Inside GitHub Actions, the workflow builds the image and runs this script
-# inside the container directly (no nested Docker).
+# Flags:
+#   --with-opencode   Install OpenCode CLI and validate its skill registration
+#   --with-claude     Install Claude Code CLI and validate its skill registration
 #
 # Environment variables:
 #   HARNESS_SOURCE_DIR  — path to harnessy repo (default: /source/harnessy)
 #   HARNESS_TARGET_DIR  — where to install (default: /workspace)
 #   SKIP_COMMUNITY      — set to 1 to skip community skills (faster CI)
+#   INSTALL_OPENCODE    — set to 1 to install OpenCode (same as --with-opencode)
+#   INSTALL_CLAUDE      — set to 1 to install Claude CLI (same as --with-claude)
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE_DIR="${HARNESS_SOURCE_DIR:-/source/harnessy}"
 TARGET_DIR="${HARNESS_TARGET_DIR:-/workspace}"
 SKIP_COMMUNITY="${SKIP_COMMUNITY:-1}"
+INSTALL_OPENCODE="${INSTALL_OPENCODE:-0}"
+INSTALL_CLAUDE="${INSTALL_CLAUDE:-0}"
+
+# Parse flags
+for arg in "$@"; do
+  case "$arg" in
+    --with-opencode) INSTALL_OPENCODE=1 ;;
+    --with-claude) INSTALL_CLAUDE=1 ;;
+  esac
+done
 
 log() { echo "[ci-verify] $*"; }
 pass() { echo "  [PASS] $*"; }
 fail() { echo "  [FAIL] $*" >&2; }
+warn() { echo "  [WARN] $*"; }
 
 FAILURES=0
 
@@ -64,6 +78,29 @@ if [[ ! -d .git ]]; then
   git config user.name "CI"
   git add -A && git commit -q -m "init" --allow-empty
   pass "Initialized git repo"
+fi
+
+# ── Phase 2.5: Optional tool installation ────────────────────────────────────
+if [[ "$INSTALL_OPENCODE" == "1" ]]; then
+  log "Phase 2.5a: Installing OpenCode CLI"
+  if npm install -g @anthropic/opencode 2>&1; then
+    pass "OpenCode CLI installed"
+    # Create minimal OpenCode config
+    mkdir -p "$HOME/.config/opencode"
+    echo '{"$schema":"https://opencode.ai/config.json"}' > "$HOME/.config/opencode/opencode.json"
+    pass "OpenCode config initialized"
+  else
+    warn "OpenCode CLI installation failed (may not be publicly available)"
+  fi
+fi
+
+if [[ "$INSTALL_CLAUDE" == "1" ]]; then
+  log "Phase 2.5b: Installing Claude Code CLI"
+  if npm install -g @anthropic/claude-code 2>&1; then
+    pass "Claude Code CLI installed"
+  else
+    warn "Claude Code CLI installation failed (may require auth or not be publicly available)"
+  fi
 fi
 
 # ── Phase 3: Run Flow install ───────────────────────────────────────────────
@@ -126,26 +163,14 @@ else
 fi
 
 # Check trace infrastructure
-if [[ -f "$HOME/.agents/skills/_shared/trace_capture.py" ]]; then
-  pass "trace_capture.py installed"
-else
-  fail "trace_capture.py missing"
-  FAILURES=$((FAILURES + 1))
-fi
-
-if [[ -f "$HOME/.agents/skills/_shared/trace_query.py" ]]; then
-  pass "trace_query.py installed"
-else
-  fail "trace_query.py missing"
-  FAILURES=$((FAILURES + 1))
-fi
-
-if [[ -f "$HOME/.agents/skills/_shared/run_metrics.py" ]]; then
-  pass "run_metrics.py installed"
-else
-  fail "run_metrics.py missing"
-  FAILURES=$((FAILURES + 1))
-fi
+for script in trace_capture.py trace_query.py run_metrics.py promote_check.py; do
+  if [[ -f "$HOME/.agents/skills/_shared/$script" ]]; then
+    pass "$script installed"
+  else
+    fail "$script missing from _shared/"
+    FAILURES=$((FAILURES + 1))
+  fi
+done
 
 # Check metrics script runs
 if python3 "$HOME/.agents/skills/_shared/run_metrics.py" compute --skill issue-flow --json &>/dev/null; then
@@ -159,7 +184,6 @@ fi
 if grep -q '"autoflow"' flow-install.lock.json 2>/dev/null; then
   pass "Lockfile tracks autoflow component"
 else
-  # autoflow is optional, just note it
   log "  [INFO] Lockfile does not track autoflow (expected for --yes installs)"
 fi
 
@@ -172,8 +196,54 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
+# ── Phase 6: Optional tool verification ─────────────────────────────────────
+if [[ "$INSTALL_OPENCODE" == "1" ]]; then
+  log "Phase 6a: OpenCode verification"
+  if command -v opencode &>/dev/null; then
+    pass "OpenCode CLI in PATH"
+    # Check OpenCode config was updated by flow-install
+    if [[ -f "$HOME/.config/opencode/opencode.json" ]]; then
+      if grep -q "skills" "$HOME/.config/opencode/opencode.json" 2>/dev/null; then
+        pass "OpenCode skills.paths configured"
+      else
+        warn "OpenCode skills.paths not configured (may need manual registration)"
+      fi
+    else
+      fail "OpenCode config missing after flow-install"
+      FAILURES=$((FAILURES + 1))
+    fi
+  else
+    warn "OpenCode CLI not in PATH (installation may have failed)"
+  fi
+fi
+
+if [[ "$INSTALL_CLAUDE" == "1" ]]; then
+  log "Phase 6b: Claude Code verification"
+  if command -v claude &>/dev/null; then
+    pass "Claude Code CLI in PATH"
+  else
+    warn "Claude Code CLI not in PATH (installation may have failed)"
+  fi
+
+  # Check Claude skills symlinks regardless (flow-install creates them)
+  CLAUDE_LINKS=$(find ~/.claude/skills/ -maxdepth 1 -type l 2>/dev/null | wc -l)
+  if [[ "$CLAUDE_LINKS" -gt 30 ]]; then
+    pass "Claude skill symlinks: $CLAUDE_LINKS"
+  else
+    warn "Expected 30+ Claude skill symlinks, found $CLAUDE_LINKS"
+  fi
+fi
+
 # ── Summary ─────────────────────────────────────────────────────────────────
 echo ""
+echo "=== Configuration ==="
+echo "  Source:        $SOURCE_DIR"
+echo "  Target:        $TARGET_DIR"
+echo "  OpenCode:      $(if [[ "$INSTALL_OPENCODE" == "1" ]]; then echo "installed"; else echo "skipped"; fi)"
+echo "  Claude:        $(if [[ "$INSTALL_CLAUDE" == "1" ]]; then echo "installed"; else echo "skipped"; fi)"
+echo "  Community:     $(if [[ "$SKIP_COMMUNITY" == "1" ]]; then echo "skipped"; else echo "installed"; fi)"
+echo ""
+
 if [[ "$FAILURES" -eq 0 ]]; then
   log "ALL CHECKS PASSED"
   exit 0

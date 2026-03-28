@@ -1,3 +1,11 @@
+---
+name: design-mockup
+description: Generate a working UI prototype from design spec and tech spec with dummy data for visual validation before full implementation.
+disable-model-invocation: true
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob
+argument-hint: "[epic-path]"
+---
+
 # Design Mockup
 
 Generate a working, runnable UI prototype from approved design and technical specifications. The mockup uses the project's actual framework, renders every screen from the design spec, and wires dummy data derived from the tech spec's data models. It is not production code — no real APIs, no tests, no business logic.

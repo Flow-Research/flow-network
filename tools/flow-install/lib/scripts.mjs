@@ -870,16 +870,19 @@ const run = async () => {
   }
 
   const opencode = await readJsonSafe(GLOBAL_OPENCODE_CONFIG);
+  const opencodeAvailable = opencode !== null;
+  const opencodeCheck = opencodeAvailable ? fail : warn;
   const opencodePaths = [];
   for (const configuredPath of opencode?.skills?.paths || []) opencodePaths.push(await normalizePath(configuredPath));
   const normalizedGlobal = await normalizePath(GLOBAL_SKILLS_DIR);
-  if (opencodePaths.includes(normalizedGlobal)) pass("OpenCode has global skills path", normalizedGlobal);
+  if (!opencodeAvailable) warn("OpenCode not installed", "OpenCode checks downgraded to warnings");
+  else if (opencodePaths.includes(normalizedGlobal)) pass("OpenCode has global skills path", normalizedGlobal);
   else fail("OpenCode has global skills path", normalizedGlobal);
   if (!(await pathExists(projectSkillsRoot))) pass("Project-local skills path optional", projectSkillsRoot);
   else {
     const normalizedProjectSkillsRoot = await normalizePath(projectSkillsRoot);
     if (opencodePaths.includes(normalizedProjectSkillsRoot)) pass("OpenCode has project-local skills path", normalizedProjectSkillsRoot);
-    else fail("OpenCode has project-local skills path", normalizedProjectSkillsRoot);
+    else opencodeCheck("OpenCode has project-local skills path", normalizedProjectSkillsRoot);
   }
 
   const localEntries = await fs.readdir(projectSkillsRoot, { withFileTypes: true }).catch(() => []);
@@ -909,7 +912,7 @@ const run = async () => {
     if (await pathExists(skillMdPath)) pass("Flow core skill has SKILL.md", skill);
     else fail("Flow core skill has SKILL.md", skill);
     if (opencodePaths.includes(normalizedGlobal) && await pathExists(skillMdPath)) pass("OpenCode can resolve Flow core skill", skill);
-    else fail("OpenCode can resolve Flow core skill", skill);
+    else opencodeCheck("OpenCode can resolve Flow core skill", skill);
     if (await pathExists(claudeSkillLink)) pass("Claude skill symlink exists", skill);
     else fail("Claude skill symlink exists", skill);
   }
@@ -955,6 +958,7 @@ const run = async () => {
       else warn("Community skill has SKILL.md", skill);
 
       if (opencodePaths.includes(normalizedGlobal) && await pathExists(skillMdPath)) pass("OpenCode can resolve community skill", skill);
+      else if (!opencodeAvailable) warn("OpenCode can resolve community skill", skill);
       else if (communityConfig.strict) fail("OpenCode can resolve community skill", skill);
       else warn("OpenCode can resolve community skill", skill);
 
@@ -970,7 +974,7 @@ const run = async () => {
     if (await pathExists(path.join(GLOBAL_CLAUDE_SKILLS_DIR, skill))) pass("Claude skill symlink for local skill", skill);
     else fail("Claude skill symlink for local skill", skill);
     if (opencodePaths.includes(await normalizePath(projectSkillsRoot))) pass("OpenCode can resolve local skill", skill);
-    else fail("OpenCode can resolve local skill", skill);
+    else opencodeCheck("OpenCode can resolve local skill", skill);
   }
 
   const failures = checks.filter((check) => !check.ok);

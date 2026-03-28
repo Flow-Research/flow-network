@@ -240,6 +240,25 @@ export const installSkills = async (flowInstallRoot, { dryRun = false } = {}) =>
     }
   }
 
+  // Copy _shared/ support directory (trace scripts, metrics, etc.)
+  const sharedSource = path.join(flowInstallRoot, "skills", "_shared");
+  const sharedTarget = path.join(GLOBAL_SKILLS_DIR, "_shared");
+  if (await pathExists(sharedSource)) {
+    if (!dryRun) {
+      await ensureDir(sharedTarget);
+      const sharedEntries = await fs.readdir(sharedSource, { withFileTypes: true });
+      let sharedCount = 0;
+      for (const entry of sharedEntries) {
+        if (!entry.isFile()) continue;
+        await fs.copyFile(path.join(sharedSource, entry.name), path.join(sharedTarget, entry.name));
+        sharedCount++;
+      }
+      log.ok(`_shared/ support scripts synced (${sharedCount} files)`);
+    } else {
+      log.dryRun("Would sync _shared/ support scripts");
+    }
+  }
+
   return { installed, skipped, upgraded, commandShims, total: sourceSkills.length };
 };
 
