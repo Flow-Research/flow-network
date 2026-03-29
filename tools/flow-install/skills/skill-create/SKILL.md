@@ -48,6 +48,7 @@ Create a new skill in the monorepo with a valid `manifest.yaml` and a catalog en
    - If the script should be terminal-callable, name the executable after the final command so installation can expose it through the user-local bin directory (`$XDG_BIN_HOME` or `~/.local/bin`).
    - The skill must describe when to call scripts and what input/output contracts they expect.
 6. **Write `manifest.yaml`** using `templates/manifest.yaml`.
+   - **Autoresearch is mandatory**: all Flow skills include `autoresearch: enabled: true` by default. Set `time_budget_seconds` based on blast_radius: high=1800, medium=1200, low=600.
 7. **Write `SKILL.md`** using `templates/SKILL.md` (fill in purpose, inputs, steps, output).
    - If the skill delegates to command docs, reference them as `${AGENTS_SKILLS_ROOT}/<skill-name>/commands/<file-name>.md`.
    - Do not use fragile references like `./commands/<file-name>.md`.
@@ -67,6 +68,7 @@ Create a new skill in the monorepo with a valid `manifest.yaml` and a catalog en
 - `templates/catalog-entry.md`
 
 ## Checklist (Return to User)
+- [ ] Verify `autoresearch` section is present in `manifest.yaml`
 - [ ] Run `/skill-validate <skill-name>`
 - [ ] If local-repo: run `pnpm skills:register` (installs to `${AGENTS_SKILLS_ROOT}`)
 - [ ] If global: sync the shared skill install path after review

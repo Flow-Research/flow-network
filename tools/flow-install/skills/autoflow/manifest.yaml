@@ -1,10 +1,10 @@
 name: autoflow
 type: opencode
-version: 0.1.0
+version: 0.2.0
 owner: julian
 status: experimental
 blast_radius: high
-description: "Autonomous issue-flow runner: processes GitHub issues, captures quality metrics, triggers skill self-improvement, and measures impact. The autoresearch pattern applied to software delivery."
+description: "Autoresearch orchestrator: discovers skills with autoresearch.enabled, runs the experiment loop (process → measure → improve → ratchet), and uses a multiplicative composite metric with hard constraint gates to guarantee monotonic skill improvement."
 permissions: [read-issues, read-projects, write-specs, write-state, write-reports, run-tests, run-validation, create-pr]
 data_categories: [none]
 egress: [api.github.com, github.com]
@@ -18,10 +18,33 @@ traces:
       - run_completion
       - metrics_evaluation
       - improvement_trigger
-      - keep_discard_decision
+      - ratchet_snapshot
+      - ratchet_evaluate
+      - ratchet_decide
     human:
       - escalation_review
       - improvement_approval
+state:
+  - path: ".jarvis/context/autoflow/state.json"
+    description: "Loop state: status, checkpoint, issues processed, ratchet score"
+  - path: ".jarvis/context/autoflow/queue.json"
+    description: "Approved issue queue with prioritization reasoning"
+  - path: ".jarvis/context/autoflow/pool.json"
+    description: "Concurrency pool state: active issues, waiting issues"
+  - path: ".jarvis/context/autoflow/runs.ndjson"
+    description: "Run-by-run log with extended metrics"
+  - path: ".jarvis/context/autoflow/improvements.ndjson"
+    description: "Improvement cycle log with ratchet decisions"
+  - path: ".jarvis/context/autoflow/ratchet_*.json"
+    description: "Per-skill ratchet state: baseline, candidate, decision"
+autoresearch:
+  enabled: true
+  metric_layer: 1
+  time_budget_seconds: 1800
+  evaluation_window: 3
+  constraints:
+    max_regression_rate: 0.1
+    max_human_intervention: 0.5
 dependencies:
   - tool: gh
     description: "GitHub CLI for issue queries"
@@ -33,6 +56,6 @@ dependencies:
     check: "git --version"
     required: true
   - tool: python3
-    description: "Python 3 for metrics and state scripts"
+    description: "Python 3 for metrics, ratchet, and state scripts"
     check: "python3 --version"
     required: true

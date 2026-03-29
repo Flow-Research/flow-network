@@ -14,6 +14,7 @@
  *   npx flow-install --memory     # Memory system
  *   npx flow-install --agents-md  # Host AGENTS.md merge
  *   npx flow-install --update-context-agents  # Update .jarvis/context/AGENTS.md managed block
+ *   npx flow-install --force      # Force-sync all skills (bypass version check)
  *   npx flow-install --dry-run    # Preview changes
  *   npx flow-install --version    # Show version
  */
@@ -68,6 +69,7 @@ const showVersion = args.has("--version") || args.has("-v");
 const dryRun = args.has("--dry-run");
 const yesAll = args.has("--yes");
 const targetArg = getArgValue("--target");
+const forceSync = args.has("--force");
 const reconfigure = args.has("--reconfigure");
 const updateContextAgents = args.has("--update-context-agents");
 
@@ -119,7 +121,7 @@ const main = async () => {
   // ── Step 2: Install shared skills to ~/.agents/skills/ ──────────────────
   if (runAll || onlySkills) {
     log.step(2, TOTAL_STEPS, "Installing shared skills to ~/.agents/skills/");
-    const result = await installSkills(__dirname, { dryRun });
+    const result = await installSkills(__dirname, { dryRun, force: forceSync });
     if (!dryRun) {
       log.info(`Skills: ${result.installed} installed, ${result.upgraded} upgraded, ${result.skipped} current`);
       log.info(`Command shims: ${result.commandShims} linked into user-local bin`);

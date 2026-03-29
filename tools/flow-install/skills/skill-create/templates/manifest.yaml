@@ -11,6 +11,17 @@ data_categories: [<pii|financial|credentials|none>]
 egress: [<allowed outbound destinations>]
 invoke: "/<skill-name>"
 location: <.agents/<type>/<skill-name>|tools/flow-install/<type>/<skill-name>>
+# Autoresearch: enables autonomous self-improvement via the ratchet loop.
+# All Flow skills include this by default. Adjust time_budget and constraints
+# based on blast_radius (high=1800s, medium=1200s, low=600s).
+autoresearch:
+  enabled: true
+  metric_layer: 1
+  time_budget_seconds: <600|1200|1800>
+  evaluation_window: 3
+  constraints:
+    max_regression_rate: 0.1
+    max_human_intervention: 0.5
 # Optional: enable decision trace capture for skill evolution.
 # Add specific gate names if the skill has review/quality gates.
 # traces:

@@ -155,7 +155,7 @@ const collectSourceSkills = async (flowInstallRoot) => {
 // Install skills to ~/.agents/skills/ with version comparison
 // ---------------------------------------------------------------------------
 
-export const installSkills = async (flowInstallRoot, { dryRun = false } = {}) => {
+export const installSkills = async (flowInstallRoot, { dryRun = false, force = false } = {}) => {
   const sourceSkills = await collectSourceSkills(flowInstallRoot);
   if (sourceSkills.length === 0) {
     log.warn("No skills found in flow-install skills/ directory.");
@@ -179,7 +179,7 @@ export const installSkills = async (flowInstallRoot, { dryRun = false } = {}) =>
       const existing = existingContent ? parseSimpleYaml(existingContent) : {};
       const cmp = compareSemver(skill.version, existing.version || "0.0.0");
 
-      if (cmp <= 0) {
+      if (cmp <= 0 && !force) {
         // Check for unpromoted improvements (installed version ahead of source)
         const installedAhead = compareSemver(existing.version || "0.0.0", skill.version) > 0;
         if (installedAhead) {

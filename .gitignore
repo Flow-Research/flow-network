@@ -18,6 +18,7 @@
 # === Agent tool working directories ===
 .claude/
 .opencode/
+.jarvis/context/autoflow/
 
 # === Editor / IDE ===
 .obsidian/

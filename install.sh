@@ -14,6 +14,7 @@ INSTALL_MODE="bootstrap"
 TARGET_ROOT=""
 INSTALL_COMMUNITY="auto"
 FLOW_RECONFIGURE="${FLOW_RECONFIGURE:-0}"
+FLOW_FORCE_SYNC="${FLOW_FORCE_SYNC:-0}"
 
 if [[ -d "$SCRIPT_DIR/tools/flow-install" && -d "$SCRIPT_DIR/Jarvis" ]]; then
   LOCAL_SOURCE=1
@@ -59,6 +60,7 @@ Modes:
 
 Flags:
   --yes             Non-interactive mode
+  --force           Force-sync all skills (bypass version check)
   --reconfigure     Ask for install destinations again even if saved in lockfile
   --no-community    Skip community skill installation
   --community       Force community skill installation
@@ -84,6 +86,9 @@ parse_args() {
         ;;
       --yes)
         FLOW_NONINTERACTIVE=1
+        ;;
+      --force)
+        FLOW_FORCE_SYNC=1
         ;;
       --reconfigure)
         FLOW_RECONFIGURE=1
@@ -184,6 +189,9 @@ install_flow_framework() {
   fi
   if [[ "$FLOW_RECONFIGURE" == "1" ]]; then
     flow_args+=(--reconfigure)
+  fi
+  if [[ "$FLOW_FORCE_SYNC" == "1" ]]; then
+    flow_args+=(--force)
   fi
 
   # When running via curl | bash, stdin is the pipe not the terminal.

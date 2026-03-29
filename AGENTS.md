@@ -53,6 +53,16 @@ Read `.jarvis/context/README.md` for the knowledge base protocol. Start with `st
 - For skills that call command docs, reference installed paths in `SKILL.md` as `${AGENTS_SKILLS_ROOT}/<skill-name>/commands/<file-name>.md`.
 - Every `SKILL.md` must declare template resolution: `Template paths are resolved from ${AGENTS_SKILLS_ROOT}/<skill-name>/.`
 
+## Autoresearch Convention
+
+All Flow skills include `autoresearch: enabled: true` in their `manifest.yaml` by default. This enables the autonomous self-improvement ratchet loop via `/autoflow`:
+
+- **Protocol**: `${AGENTS_SKILLS_ROOT}/_shared/autoresearch.md` defines the three-file contract (editable skills / fixed evaluation / human control)
+- **Metric**: Multiplicative composite score (`ratchet.py`) — weakness in any dimension drags the entire score
+- **Hard gates**: Catastrophic failures and regressions are vetoes, not soft penalties
+- **When creating skills**: `/skill-create` includes autoresearch by default. Set `time_budget_seconds` by blast_radius: high=1800, medium=1200, low=600
+- **Human control**: `program.md` at the repo root steers the loop. Agents read it every iteration but never modify it.
+
 ## Technical Debt Tracking Law
 
 - Treat intentional shortcuts, deferred migrations, and knowingly postponed cleanup as **tracked technical debt**, not informal notes.
