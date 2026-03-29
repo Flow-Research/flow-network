@@ -6,7 +6,7 @@
 - Date: 2026-03-23
 - Owner: Flow maintainer
 - Scope: Flow core, installer, shared context, imported sibling projects
-- Trigger: need a standard way for the main Flow project to allow and guarantee installation of skills and curated knowledge from other Flow-compatible local repositories such as `~/Documents/Code/Accelerate Africa`
+- Trigger: need a standard way for the main Flow project to allow and guarantee installation of skills and curated knowledge from other Flow-compatible local repositories such as `~/path/to/pilot-project-a`
 
 ## Why this plan exists
 
@@ -45,7 +45,7 @@ We need a standard, deterministic, and auditable mechanism that lets Flow Networ
 - Context loading is repo-local and tiered through `.jarvis/context/` and sub-project overrides.
 - `flow-install.lock.json` tracks installed Flow components, but not imported sibling projects.
 
-### Accelerate Africa today
+### pilot-project-a today
 
 - Local skills live in `.agents/skills/` and are copied into `~/.agents/skills/`.
 - Project knowledge is structured cleanly under `.jarvis/context/`.
@@ -189,10 +189,10 @@ Example model:
   "schemaVersion": "1.0",
   "imports": [
     {
-      "name": "accelerate-africa",
+      "name": "pilot-project-a",
       "source": {
         "type": "path",
-        "path": "../Accelerate Africa"
+        "path": "../pilot-project-a"
       },
       "exports": {
         "skills": ".agents/skills",
@@ -264,8 +264,8 @@ Namespace imported skills by source.
 
 Recommended format:
 
-- `accelerate-africa:build-e2e`
-- `accelerate-africa:issue-flow`
+- `pilot-project-a:build-e2e`
+- `pilot-project-a:issue-flow`
 
 ### Why
 
@@ -443,11 +443,11 @@ Success criteria:
 
 - Flow can ingest curated sibling knowledge without treating it as authoritative local context
 
-### Phase 4: pilot with Accelerate Africa
+### Phase 4: pilot with pilot-project-a
 
 Pilot source:
 
-- `~/Documents/Code/Accelerate Africa`
+- `~/path/to/pilot-project-a`
 
 Pilot scope:
 
@@ -474,9 +474,9 @@ Success criteria:
 - multiple sibling repos can be imported safely
 - failures are deterministic and visible
 
-## Pilot recommendation for Accelerate Africa
+## Pilot recommendation for pilot-project-a
 
-Use Accelerate Africa as the first proving ground because it already demonstrates:
+Use pilot-project-a as the first proving ground because it already demonstrates:
 
 - real project-local skill usage
 - strong `.jarvis/context/` hygiene
@@ -487,7 +487,7 @@ Recommended pilot defaults:
 - mode: `link` for skills
 - mode: `vendor` for exported knowledge
 - trust: `internal-reviewed`
-- imported skills namespaced with `accelerate-africa:`
+- imported skills namespaced with `pilot-project-a:`
 
 ## Open questions to resolve during implementation
 

@@ -1,6 +1,6 @@
 # Skill Promotion Maintainer Playbook
 
-This playbook defines how a maintainer promotes a skill from a Flow-installed project such as Accelerate Africa into Flow's shared skill set.
+This playbook defines how a maintainer promotes a skill from a Flow-installed project into Flow's shared skill set.
 
 This is a Git-native maintainer workflow. The installed repo is the proving ground. Flow is the distribution layer.
 
@@ -19,7 +19,7 @@ Example source repo:
 <repo-root>
 ```
 
-The process is not specific to Accelerate Africa. Any Flow-installed repo can use it.
+Any Flow-installed repo can use this process.
 
 ## Core Principle
 
@@ -144,7 +144,7 @@ Instead:
 4. keep only the reusable behavior in the shared version
 5. leave project-specific guidance behind in the installed repo if still useful
 
-The shared skill must feel native to Flow, not like an AA export.
+The shared skill must feel native to Flow, not like a project-specific export.
 
 ## Phase 6: Promote into Flow
 

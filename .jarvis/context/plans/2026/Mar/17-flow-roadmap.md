@@ -20,7 +20,7 @@ Flow is a full stack for human+AI economic coordination:
 | **Bittensor**          | Initial external demand and reward source                                   |
 
 
-Flow is infrastructure. Projects like Accelerate Africa are customers/instances. Each user gets a personal Jarvis agent that can earn on their behalf.
+Flow is infrastructure. Projects like pilot-project-a are customers/instances. Each user gets a personal Jarvis agent that can earn on their behalf.
 
 ## Architecture Layers
 
@@ -45,7 +45,7 @@ Flow and project instances (like AA) share infrastructure but keep context separ
 | --------------------- | ------------------------------------ | --------------------------------------------------------------- |
 | Global (user)         | `~/.jarvis/context/`                 | Personal preferences, patterns, calendar                        |
 | Flow infrastructure   | `Flow Network/.jarvis/context/`      | Architecture, skills catalog, plans, roadmap, tech debt         |
-| Project instance (AA) | `Accelerate Africa/.jarvis/context/` | Project specs, epics, meeting notes, AA-specific decisions      |
+| Project instance (AA) | `pilot-project-a/.jarvis/context/` | Project specs, epics, meeting notes, AA-specific decisions      |
 | Shared skills         | `~/.agents/skills/`                  | Both repos register skills here; agents discover from one place |
 
 
@@ -64,7 +64,7 @@ Jarvis CLI already supports this via two-tier context loading (global + folder).
 | 2   | Fix `projects.md` reference to `Flow/CLAUDE.md` → `Flow/AGENTS.md`                                           | Done      |
 | 3   | Create `Focus/Flow/AGENTS.md` with POC-specific instructions                                                 | Done      |
 | 4   | Align the canonical status and roadmap docs with the current execution plan                                  | Done      |
-| 5   | Resolve Jarvis CLI distribution (TD-003) — `uv tool install` from Flow Network/Jarvis                        | Done. Local install works, `install.sh` exists, and cross-project rollout completed for AA + Awadoc. GitHub publish remains an operational release step. |
+| 5   | Resolve Jarvis CLI distribution (TD-003) — `uv tool install` from Flow Network/Jarvis                        | Done. Local install works, `install.sh` exists, and cross-project rollout completed for pilot projects. GitHub publish remains an operational release step. |
 | 6   | Audit `.env` files across sub-projects (ensure all gitignored)                                               | Open      |
 | 7   | Installation architecture plan: Phases 0-5 complete, Phase 4 (memory) and Phase 6 (community skills) pending | Reference |
 

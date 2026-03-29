@@ -17,7 +17,7 @@ Usage:
         [--duration-seconds 2722] \
         [--phase-id 3 --phase-name "PRD review"] \
         [--skill-version 0.8.0] \
-        [--issue-number 113 --project accelerate-africa --epic program-team-selection] \
+        [--issue-number 113 --project my-project --epic onboarding] \
         [--precedent "tr_20260320..."] \
         [--state-path /path/to/.issue-flow-state.json]
 

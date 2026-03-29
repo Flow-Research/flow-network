@@ -15,7 +15,7 @@
 
 ## 1. Executive Summary
 
-The Agent Memory System is a persistent, hierarchical, backend-agnostic memory layer for AI agents and team members working on the Accelerate Africa platform. It enables agents to retain context across sessions, inherit organizational knowledge through composable scopes, and store memories against pluggable storage backends.
+The Agent Memory System is a persistent, hierarchical, backend-agnostic memory layer for AI agents and team members working on the the target project platform. It enables agents to retain context across sessions, inherit organizational knowledge through composable scopes, and store memories against pluggable storage backends.
 
 The system is delivered in four phases: scoped file conventions (Phase 1), MCP server with Supabase semantic search (Phase 2), progressive summarization and temporal queries (Phase 3), and product coaching memory (Phase 4). Phase 1 is the immediate implementation target.
 
@@ -23,7 +23,7 @@ The system is delivered in four phases: scoped file conventions (Phase 1), MCP s
 
 ## 2. Problem Statement
 
-AI coding agents in the Accelerate Africa monorepo are stateless across sessions. Every new session starts from zero context unless the agent manually reads documentation files. This results in:
+AI coding agents in the the target project monorepo are stateless across sessions. Every new session starts from zero context unless the agent manually reads documentation files. This results in:
 
 - **Repeated context loading:** Agents re-discover project conventions, architecture decisions, and contributor preferences every session.
 - **Lost institutional knowledge:** Decisions made during one session are not persisted in a structured, retrievable way.
@@ -234,7 +234,7 @@ The foundational feature. All other features depend on the scope model.
 **so that** I have full context about conventions, decisions, and preferences without needing them re-explained.
 
 **Acceptance Criteria:**
-- Agent reads `_scopes.yaml` and resolves scope chain `app:api → project:aa-platform → org:accelerate-africa`
+- Agent reads `_scopes.yaml` and resolves scope chain `app:api → project:my-project → org:my-org`
 - Agent reads `decisions.md`, `facts.md`, `preferences.md`, `events.md` from each scope directory
 - Closer scope entries are presented before parent scope entries
 - Superseded entries are excluded
@@ -347,7 +347,7 @@ The foundational feature. All other features depend on the scope model.
 | AC-03 | User scope maps to `private/<username>/` | `_scopes.yaml` references `private/` path for user type |
 | AC-04 | At least 3 scope levels have populated memory files with real content | org, project, and one app scope each have at least one non-empty memory file |
 | AC-05 | Memory files use consistent frontmatter schema (created_at, status, memory_type, source) | All entries in all memory files have required frontmatter fields |
-| AC-06 | An agent can resolve a scope chain from a working directory path | Given `apps/api/src/auth.ts`, resolves to `app:api → project:aa-platform → org:accelerate-africa` |
+| AC-06 | An agent can resolve a scope chain from a working directory path | Given `apps/api/src/auth.ts`, resolves to `app:api → project:my-project → org:my-org` |
 | AC-07 | Scope chain composition returns memories in priority order (closest first) | Reading from `app:api` chain returns api memories before project memories before org memories |
 | AC-08 | Superseded memories are excluded from default reads | Memory with `status: superseded` is not included in composed output |
 | AC-09 | `pnpm setup` creates personal scope (already implemented) | Running setup creates `private/<username>/` |
@@ -367,12 +367,12 @@ The foundational feature. All other features depend on the scope model.
 .jarvis/context/
 ├── scopes/
 │   ├── _scopes.yaml              # Scope registry with hierarchy + glob patterns
-│   ├── org/                       # org:accelerate-africa
+│   ├── org/                       # org:my-org
 │   │   ├── decisions.md
 │   │   ├── facts.md
 │   │   ├── preferences.md
 │   │   └── events.md
-│   ├── project/                   # project:aa-platform
+│   ├── project/                   # project:my-project
 │   │   ├── decisions.md
 │   │   ├── facts.md
 │   │   ├── preferences.md
@@ -400,39 +400,39 @@ The foundational feature. All other features depend on the scope model.
 version: 1
 
 scopes:
-  - id: "org:accelerate-africa"
+  - id: "org:my-org"
     type: org
     parent: null
     path: org/
     match: "**"                    # Root fallback: matches everything
 
-  - id: "project:aa-platform"
+  - id: "project:my-project"
     type: project
-    parent: "org:accelerate-africa"
+    parent: "org:my-org"
     path: project/
     match: "apps/**"               # Any file under apps/
 
   - id: "app:api"
     type: app
-    parent: "project:aa-platform"
+    parent: "project:my-project"
     path: project/apps/api/
     match: "apps/api/**"
 
   - id: "app:admin"
     type: app
-    parent: "project:aa-platform"
+    parent: "project:my-project"
     path: project/apps/admin/
     match: "apps/admin/**"
 
   - id: "app:my-coach-app"
     type: app
-    parent: "project:aa-platform"
+    parent: "project:my-project"
     path: project/apps/my-coach-app/
     match: "apps/my-coach-app/**"
 
   - id: "app:cms"
     type: app
-    parent: "project:aa-platform"
+    parent: "project:my-project"
     path: project/apps/cms/
     match: "apps/cms/**"
 
@@ -488,7 +488,7 @@ CREATE TABLE memories (
   content TEXT NOT NULL,
   embedding VECTOR(1536),
   scope_type TEXT NOT NULL,       -- org, project, app, user
-  scope_id TEXT NOT NULL,         -- accelerate-africa, aa-platform, api, julian
+  scope_id TEXT NOT NULL,         -- my-org, my-project, api, julian
   parent_scope_id UUID,           -- FK to scopes table
   memory_type TEXT NOT NULL,      -- fact, decision, preference, event
   status TEXT DEFAULT 'active',   -- active, superseded

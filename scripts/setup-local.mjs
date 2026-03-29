@@ -4,7 +4,7 @@
  * Flow Harness — Local setup wizard
  *
  * Creates personal context files, verifies Jarvis CLI, and registers skills.
- * Adapted from Accelerate Africa's setup-local.mjs for the Flow Harness workspace.
+ * Creates personal context files, verifies Jarvis CLI, and registers skills.
  *
  * Usage:
  *   pnpm setup              # interactive wizard

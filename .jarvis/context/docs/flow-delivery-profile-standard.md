@@ -83,11 +83,11 @@ The delivery profile supplies the minimum configuration needed by:
 ## Rules
 
 1. Flow shared skills must prefer the delivery profile over repo-specific defaults.
-2. If a field is missing, skills may fall back to safe generic behavior, but they must not silently assume AA-specific paths or helper names.
+2. If a field is missing, skills may fall back to safe generic behavior, but they must not silently assume project-specific paths or helper names.
 3. Project-specific adapters belong in the delivery profile, not in shared skill source.
 4. A skill that cannot operate correctly without profile data must fail clearly and explain the missing keys.
 
 ## Verification
 
 - Shared skill docs must point to this contract when they require project configuration.
-- Downstream repos such as `Awadoc` should be able to adopt the Flow delivery model by creating `.flow/delivery-profile.json` without editing shared skills.
+- Downstream repos such as `pilot-project-b` should be able to adopt the Flow delivery model by creating `.flow/delivery-profile.json` without editing shared skills.

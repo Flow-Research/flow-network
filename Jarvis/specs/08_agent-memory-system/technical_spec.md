@@ -144,12 +144,12 @@ Define the implementation architecture for the Agent Memory System: a persistent
 ├── scopes/
 │   ├── _scopes.yaml                    # Scope registry (git-tracked)
 │   ├── _pending_memories.md            # Staging file for commit-extracted memories (gitignored)
-│   ├── org/                            # org:accelerate-africa
+│   ├── org/                            # org:my-org
 │   │   ├── decisions.md
 │   │   ├── facts.md
 │   │   ├── preferences.md
 │   │   └── events.md
-│   └── project/                        # project:aa-platform
+│   └── project/                        # project:my-project
 │       ├── decisions.md
 │       ├── facts.md
 │       ├── preferences.md
@@ -176,40 +176,40 @@ Define the implementation architecture for the Agent Memory System: a persistent
 version: 1
 
 scopes:
-  - id: "org:accelerate-africa"
+  - id: "org:my-org"
     type: org
     parent: null
     path: org/
     # Org scope is never auto-matched. It is always the root of every chain.
     # Only reached as the terminal parent, not via glob matching.
 
-  - id: "project:aa-platform"
+  - id: "project:my-project"
     type: project
-    parent: "org:accelerate-africa"
+    parent: "org:my-org"
     path: project/
     match: "**"                    # Catch-all: any file in the repo is part of this project
 
   - id: "app:api"
     type: app
-    parent: "project:aa-platform"
+    parent: "project:my-project"
     path: project/apps/api/
     match: "apps/api/**"
 
   - id: "app:admin"
     type: app
-    parent: "project:aa-platform"
+    parent: "project:my-project"
     path: project/apps/admin/
     match: "apps/admin/**"
 
   - id: "app:my-coach-app"
     type: app
-    parent: "project:aa-platform"
+    parent: "project:my-project"
     path: project/apps/my-coach-app/
     match: "apps/my-coach-app/**"
 
   - id: "app:cms"
     type: app
-    parent: "project:aa-platform"
+    parent: "project:my-project"
     path: project/apps/cms/
     match: "apps/cms/**"
 
@@ -308,7 +308,7 @@ API uses JWT authentication with RS256 signing.
 CREATE TABLE memory_scopes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   type TEXT NOT NULL,                -- org, project, app, user
-  identifier TEXT NOT NULL,          -- accelerate-africa, aa-platform, api, julian
+  identifier TEXT NOT NULL,          -- my-org, my-project, api, julian
   parent_id UUID REFERENCES memory_scopes(id),
   path TEXT,                         -- filesystem path relative to scopes/
   match_pattern TEXT,                -- glob pattern for auto-detection
@@ -416,12 +416,12 @@ apps/*/src/**        → literal segments: ["apps"]             → specificity 
 
 **Process:**
 1. Test `apps/api/**` → MATCH → `app:api`
-2. Walk parents: `app:api` → parent `project:aa-platform` → parent `org:accelerate-africa` → parent null (root)
+2. Walk parents: `app:api` → parent `project:my-project` → parent `org:my-org` → parent null (root)
 3. Add user: `user:julian`
 
 **Output scope chain:**
 ```
-[user:julian, app:api, project:aa-platform, org:accelerate-africa]
+[user:julian, app:api, project:my-project, org:my-org]
 ```
 
 **Memory files read (in order):**
@@ -480,7 +480,7 @@ Only extract genuinely reusable knowledge. Skip routine changes.
 
 User: Commit: "feat(api): add JWT auth with RS256 signing"
 Files: apps/api/src/modules/auth/auth.module.ts (new), apps/api/src/modules/auth/auth.service.ts (new), ...
-Scopes: [app:api, project:aa-platform, org:accelerate-africa]
+Scopes: [app:api, project:my-project, org:my-org]
 ```
 
 ### 6.4 Script Design (`scripts/memory-extract.mjs`)
@@ -832,7 +832,7 @@ CREATE POLICY "write_memories" ON memories FOR INSERT
 | TC-07 | Commit message containing `---\nstatus: active\n---` passed to extraction | Content is sanitized; pending file is not corrupted |
 | TC-08 | `git diff-tree` on initial commit (no parent) | Script handles gracefully, returns file list |
 | TC-09 | Specificity tie between two patterns with equal literal segments | First-defined in YAML wins |
-| TC-10 | File path `packages/shared/src/memory/types.ts` matched | Resolves to `project:aa-platform` (catch-all), not `org` |
+| TC-10 | File path `packages/shared/src/memory/types.ts` matched | Resolves to `project:my-project` (catch-all), not `org` |
 
 ### 10.3 Extraction Heuristic Test Cases
 
@@ -900,11 +900,11 @@ Rollback to Phase 1: disable the MCP server and Supabase provider in `memory.con
 
 | Source File | Target Scope | Memory Type | Estimated Entries |
 |---|---|---|---|
-| `AGENTS.md` "Critical Constraints" section | `project:aa-platform` | fact | 5-6 (Node version, pnpm, Tailwind versions, monorepo builds, env files) |
-| `AGENTS.md` "Code Patterns" section | `project:aa-platform` | fact | 3-4 (Axios instance, Jotai state, path aliases) |
-| `AGENTS.md` "Deprecated Apps" section | `project:aa-platform` | decision | 1 (coach app deprecated, prefer my-coach-app) |
-| `.jarvis/context/decisions.md` | `project:aa-platform` or `org:accelerate-africa` | decision | Review and categorize by scope |
-| `.jarvis/context/architecture/*.md` | `org:accelerate-africa` | fact, decision | Extract key architecture decisions |
+| `AGENTS.md` "Critical Constraints" section | `project:my-project` | fact | 5-6 (Node version, pnpm, Tailwind versions, monorepo builds, env files) |
+| `AGENTS.md` "Code Patterns" section | `project:my-project` | fact | 3-4 (Axios instance, Jotai state, path aliases) |
+| `AGENTS.md` "Deprecated Apps" section | `project:my-project` | decision | 1 (coach app deprecated, prefer my-coach-app) |
+| `.jarvis/context/decisions.md` | `project:my-project` or `org:my-org` | decision | Review and categorize by scope |
+| `.jarvis/context/architecture/*.md` | `org:my-org` | fact, decision | Extract key architecture decisions |
 | App-specific patterns (e.g., admin uses Tailwind v4) | `app:admin`, `app:api`, etc. | fact | 2-3 per app |
 
 All migrated entries use `source: migration` in frontmatter. Original files remain unchanged.

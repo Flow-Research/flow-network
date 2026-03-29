@@ -2,11 +2,11 @@
 
 ## Overview
 
-A persistent, hierarchical, backend-agnostic memory system for AI agents working on the Accelerate Africa platform. The system enables agents (Claude Code, Jarvis CLI, future agents) and team members to store, retrieve, and share contextual memories that persist across sessions and compose across organizational scopes. The architecture is designed to evolve from a development-agent tool into a platform product feature powering AI-driven coaching.
+A persistent, hierarchical, backend-agnostic memory system for AI agents working on the the target project platform. The system enables agents (Claude Code, Jarvis CLI, future agents) and team members to store, retrieve, and share contextual memories that persist across sessions and compose across organizational scopes. The architecture is designed to evolve from a development-agent tool into a platform product feature powering AI-driven coaching.
 
 ## Problem Statement
 
-AI coding agents in the Accelerate Africa monorepo lose all context between sessions. Decisions made in one session are forgotten in the next. Project conventions must be manually re-explained. There is no structured way for agents to know what has been decided, what patterns apply at each level (org, project, app), or what a specific contributor's preferences are.
+AI coding agents in the the target project monorepo lose all context between sessions. Decisions made in one session are forgotten in the next. Project conventions must be manually re-explained. There is no structured way for agents to know what has been decided, what patterns apply at each level (org, project, app), or what a specific contributor's preferences are.
 
 The existing `.jarvis/context/` vault provides static markdown context, but it lacks:
 - Scoped retrieval (agent gets ALL context, not just what's relevant to its current scope)
@@ -18,7 +18,7 @@ The existing `.jarvis/context/` vault provides static markdown context, but it l
 ## Target Audience
 
 - **Primary (Phase 1-3):** AI coding agents (Claude Code, Jarvis CLI) and development team members working on the AA monorepo
-- **Secondary (Phase 4):** AI coaching agents and platform users (founders, coaches) on the Accelerate Africa platform
+- **Secondary (Phase 4):** AI coaching agents and platform users (founders, coaches) on the the target project platform
 
 ## Core Concept / Confirmed Product Decisions
 
@@ -37,8 +37,8 @@ Memories belong to scopes arranged in a hierarchy. When retrieving context, an a
 
 **Development scopes (Phase 1-3):**
 ```
-org:accelerate-africa
-├── project:aa-platform
+org:my-org
+├── project:my-project
 │   ├── app:api
 │   ├── app:admin
 │   ├── app:my-coach-app
@@ -48,7 +48,7 @@ org:accelerate-africa
 
 **Product scopes (Phase 4, future):**
 ```
-org:accelerate-africa
+org:my-org
 ├── cohort:cohort-N
 │   ├── founder:<name>
 │   └── coach:<name>
@@ -137,7 +137,7 @@ Routing strategies: write-through (write to all), capability-based (semantic →
 
 1. Agent starts a session and reads `_scopes.yaml` from the memory root
 2. Agent auto-detects its scope from the current working directory using glob patterns in the registry
-3. Agent resolves the full scope chain by walking up parent references (e.g., `app:api → project:aa-platform → org:accelerate-africa`)
+3. Agent resolves the full scope chain by walking up parent references (e.g., `app:api → project:my-project → org:my-org`)
 4. Agent appends user scope from system username (e.g., `user:julian`)
 5. Agent reads memory files from each scope directory in chain order (closest first)
 6. Closer scope memories take precedence on conflict
@@ -165,7 +165,7 @@ Routing strategies: write-through (write to all), capability-based (semantic →
 
 Hybrid auto-detection + override:
 
-1. **Auto-detect from working directory.** A `_scopes.yaml` registry at the memory root defines glob patterns mapping file paths to scopes. An agent editing `apps/api/src/auth.ts` matches `apps/api/**` → resolves to `app:api → project:aa-platform → org:accelerate-africa`.
+1. **Auto-detect from working directory.** A `_scopes.yaml` registry at the memory root defines glob patterns mapping file paths to scopes. An agent editing `apps/api/src/auth.ts` matches `apps/api/**` → resolves to `app:api → project:my-project → org:my-org`.
 2. **User scope from system username.** Always appended via `os.userInfo().username` or environment variable.
 3. **Explicit override** when auto-detection doesn't apply (e.g., Jarvis CLI working cross-project, or an agent explicitly told its scope via config).
 
@@ -174,8 +174,8 @@ Hybrid auto-detection + override:
 **Default: store at the narrowest scope where the memory is universally true.**
 
 - "API uses NestJS 10" → `app:api` (only applies to the API)
-- "We use pnpm, not npm" → `project:aa-platform` (applies to all apps)
-- "Our mission is X" → `org:accelerate-africa` (org-wide)
+- "We use pnpm, not npm" → `project:my-project` (applies to all apps)
+- "Our mission is X" → `org:my-org` (org-wide)
 - "Julian prefers detailed commits" → `user:julian` (personal)
 
 Agent defaults to its current scope. Can explicitly target a broader scope when the memory applies beyond the current context. In Phase 2+, the MCP server provides `memory_write(content, scope?)` where scope is optional.
@@ -239,11 +239,11 @@ The `user:<username>` scope is **not** stored under `scopes/` like org/project/a
 **Decision:** The memory system scope hierarchy has been generalized to be project-agnostic. This was tracked as FN-TD-002.
 
 **What changed:**
-- Scope hierarchy is no longer hardcoded to AA (`org:accelerate-africa`, `project:aa-platform`, `app:api`, etc.)
+- Scope hierarchy is no longer hardcoded to the target project (`org:my-org`, `project:my-project`, `app:api`, etc.)
 - `_scopes.yaml` is now auto-generated during `flow-install` by detecting `package.json` workspaces and git remote
 - The scope format (org > project > app > user) remains the same, but contents are project-specific
 - Phase 4 product scopes (`cohort:`, `founder:`, `coach:`) are deferred as AA-specific extensions (FN-TD-004)
 - Onboarding changed from `pnpm setup` to `npx flow-install` as the canonical installation mechanism
 - Component location for Phase 1 implementation remains in Jarvis CLI (`src/jarvis/memory/`), but the scaffolding is now handled by `flow-install`
 
-**Implementation:** `tools/flow-install/lib/memory.mjs` contains the auto-detection algorithm and `_scopes.yaml` generation logic. Installed successfully into Accelerate Africa (7 scopes: org + project + 5 apps), Awadoc (2 scopes: org + project), and Flow Network (2 scopes: org + project).
+**Implementation:** `tools/flow-install/lib/memory.mjs` contains the auto-detection algorithm and `_scopes.yaml` generation logic. Installed successfully into pilot-project-a (7 scopes: org + project + 5 apps), pilot-project-b (2 scopes: org + project), and Flow Network (2 scopes: org + project).

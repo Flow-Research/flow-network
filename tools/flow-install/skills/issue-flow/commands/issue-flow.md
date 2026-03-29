@@ -44,10 +44,10 @@ Issue-flow uses a standardized sibling worktree root outside the project folder:
 
 Examples:
 
-- repo root: `/code/Accelerate Africa`
-- worktree root: `/code/Accelerate Africa-worktrees`
-- issue worktree: `/code/Accelerate Africa-worktrees/113_program-team-selection`
-- if invoked from `/code/Accelerate Africa-worktrees/112_program-team-sourcing`, the canonical worktree root still remains `/code/Accelerate Africa-worktrees`
+- repo root: `/code/my-project`
+- worktree root: `/code/my-project-worktrees`
+- issue worktree: `/code/my-project-worktrees/113_add-user-validation`
+- if invoked from `/code/my-project-worktrees/112_fix-auth-redirect`, the canonical worktree root still remains `/code/my-project-worktrees`
 
 Derive this path at runtime using `${AGENTS_SKILLS_ROOT}/issue-flow/scripts/issue_flow_git.py`.
 

@@ -9,7 +9,7 @@
 
 Any developer, contributor, or user should be able to set up a complete Flow workspace with one command. Jarvis should be installable independently for use in any project. The workspace comes with skills, scripts, memory, personal context, a shared context vault, and agent instructions — all wired up.
 
-As of 2026-03-19, the local implementation is complete: `flow-install` is the installer, `install.sh` is the bootstrap entry point, shared skills are sourced from `tools/flow-install/skills/`, and Accelerate Africa + Awadoc have both been migrated to the canonical layout. The only remaining external step is publishing the hub repo so the GitHub URLs in this plan become live.
+As of 2026-03-19, the local implementation is complete: `flow-install` is the installer, `install.sh` is the bootstrap entry point, shared skills are sourced from `tools/flow-install/skills/`, and pilot projects have both been migrated to the canonical layout. The only remaining external step is publishing the hub repo so the GitHub URLs in this plan become live.
 
 ## What "Installing Flow" Means
 
@@ -323,7 +323,7 @@ Add an "Installation" section near the top:
 
 ### Deferred: Memory System Generalization
 
-The memory spec at `Jarvis/specs/08_agent-memory-system/` has AA-specific scope hierarchies (`org:accelerate-africa`, `project:aa-platform`, `app:admin`). Needs generalization to work for any project.
+The memory spec at `Jarvis/specs/08_agent-memory-system/` has AA-specific scope hierarchies (`org:pilot-project-a`, `project:aa-platform`, `app:admin`). Needs generalization to work for any project.
 
 | # | Task | Notes |
 |---|------|-------|

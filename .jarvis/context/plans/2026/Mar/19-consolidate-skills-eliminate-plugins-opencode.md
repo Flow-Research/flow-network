@@ -65,7 +65,7 @@
 - `.jarvis/context/plans/2026/Mar/17-*.md` — 3 files with references
 - Historical records; update references but won't break anything
 
-### 2. Accelerate Africa
+### 2. pilot-project-a
 
 **Move project-specific skills to `.agents/skills/`**:
 - AA has 27 skills in `plugins/opencode/`. 18 are shared (already in flow-install). 10 are AA-specific:
@@ -86,7 +86,7 @@
 **Delete superseded local scripts:**
 - `scripts/register-opencode-skills.mjs` (replaced by `~/.scripts/register-skills.mjs`)
 
-### 3. Awadoc
+### 3. pilot-project-b
 
 **Already has `.agents/skills/`** with 23 vendored skills:
 - Update all 23 manifest.yaml `location:` fields from `plugins/opencode/<name>` to `.agents/skills/<name>`
@@ -133,8 +133,8 @@
 4. **Run flow-install on all projects** (propagates all changes to global locations):
    - `cd "Flow Network" && node tools/flow-install/index.mjs --yes`
    - `cd Jarvis && node ../tools/flow-install/index.mjs --yes`
-   - `cd "Accelerate Africa" && node "path/to/flow-install/index.mjs" --yes`
-   - `cd Awadoc/awadoc && node "path/to/flow-install/index.mjs" --yes`
+   - `cd "pilot-project-a" && node "path/to/flow-install/index.mjs" --yes`
+   - `cd pilot-project-b/pilot-project-b && node "path/to/flow-install/index.mjs" --yes`
 
 5. **Migrate AA project-specific skills**:
    - Move 10 AA-specific skills from `plugins/opencode/` to `.agents/skills/`
@@ -143,7 +143,7 @@
    - Update AA's AGENTS.md
    - Delete AA's local `scripts/register-opencode-skills.mjs`
 
-6. **Update Awadoc manifests**:
+6. **Update pilot-project-b manifests**:
    - Update 23 manifest.yaml location fields in `.agents/skills/`
    - Update AGENTS.md
 
@@ -175,5 +175,5 @@
 | AA skill moves | 10 directories |
 | AA deletions | ~18 directories (shared skills from plugins/opencode/) |
 | AA config/docs | ~4 files |
-| Awadoc manifests | 23 files |
+| pilot-project-b manifests | 23 files |
 | Global (auto-regenerated) | ~30 files via flow-install re-run |

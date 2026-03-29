@@ -131,7 +131,7 @@ Template reference:
 2. Scenario numbering and suite naming must be profile-compatible, not app-name-specific.
 3. Browser/API cross-references must be deterministic and stable across regenerations.
 4. Coverage updates must be additive and traceable back to source specs.
-5. New repos should be able to create compliant artifacts from the templates alone, without copying AA-specific examples.
+5. New repos should be able to create compliant artifacts from the templates alone, without copying project-specific examples.
 
 ## Templates
 

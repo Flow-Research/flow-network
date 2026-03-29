@@ -1,26 +1,26 @@
-# Accelerate Africa Skill Promotion and Standardization Plan
+# pilot-project-a Skill Promotion and Standardization Plan
 
 **Date:** 2026-03-23
 **Status:** in-progress (Bucket A extraction complete and validated locally; Bucket B promoted through ci-fix/local-run/github-issue-create, pending commit)
 **Owner:** Flow maintainer
-**Scope:** Promote and standardize Accelerate Africa local skills into Flow shared skills, wrappers, or retained local-only assets
-**Source repo:** `/Users/julian/Documents/Code/Accelerate Africa`
+**Scope:** Promote and standardize pilot-project-a local skills into Flow shared skills, wrappers, or retained local-only assets
+**Source repo:** `/path/to/pilot-project-a`
 **Target Flow repo:** `/Users/julian/Documents/Code/Flow Network`
-**Downstream validation repo:** `/Users/julian/Documents/Code/Awadoc/awadoc`
+**Downstream validation repo:** `/path/to/pilot-project-b`
 
 ### Overall Success Criterion
 
 The effort is complete when:
 
 - All approved skills exist in `tools/flow-install/skills/`, pass validation, and are committed
-- At least one downstream project (Awadoc) can install Flow and consume the CI/codegen skills with only a delivery profile
+- At least one downstream project (pilot-project-b) can install Flow and consume the CI/codegen skills with only a delivery profile
 - AA's local skill directories point to shared Flow versions (thin wrappers where needed, deletions where not)
 
 ---
 
 ## Objective
 
-Adopt the useful skill system work from Accelerate Africa as a Flow standard so the reusable parts can ship from `tools/flow-install/skills/` and become installable in downstream Flow projects such as Awadoc.
+Adopt the useful skill system work from pilot-project-a as a Flow standard so the reusable parts can ship from `tools/flow-install/skills/` and become installable in downstream Flow projects such as pilot-project-b.
 
 This is not a blind copy operation. The goal is to:
 
@@ -75,7 +75,7 @@ References:
 - AA governance metadata has drift and missing catalog coverage.
 - Some skills still encode `my-coach-app`, Supabase, GitHub Project, or monorepo-specific assumptions.
 - Some state artifacts and docs leak machine-specific or repo-specific paths.
-- Awadoc is a strong portability target for backend-oriented and config-driven validation, but a weak target for browser-first flows.
+- pilot-project-b is a strong portability target for backend-oriented and config-driven validation, but a weak target for browser-first flows.
 
 ---
 
@@ -106,7 +106,7 @@ These 10 skills are already generalized and present in `tools/flow-install/skill
 - `test-quality-validator`
 - `tmux-agent-launcher`
 
-Remaining work: commit, then validate against Awadoc to determine whether the delivery profile is sufficient or if adapters are needed (evidence-driven, not speculative).
+Remaining work: commit, then validate against pilot-project-b to determine whether the delivery profile is sufficient or if adapters are needed (evidence-driven, not speculative).
 
 ### Bucket B: Promote into Flow after cleanup
 
@@ -165,11 +165,11 @@ Reference:
 
 - `.jarvis/context/docs/flow-delivery-verification-standard.md`
 
-### 4. Repo adapters (contingent — only if Awadoc validation proves the delivery profile insufficient)
+### 4. Repo adapters (contingent — only if pilot-project-b validation proves the delivery profile insufficient)
 
 The delivery profile already handles most project-specific configuration through its `browser.supportImports`, `api.supportImports`, `api.fixtureSeedRules`, and `browser.dbHelperRules` fields. A separate "adapter" abstraction layer should NOT be introduced speculatively.
 
-If downstream validation (Awadoc) reveals cases where the delivery profile cannot express a needed configuration, then and only then introduce a targeted adapter mechanism. Document what the profile couldn't handle and why.
+If downstream validation (pilot-project-b) reveals cases where the delivery profile cannot express a needed configuration, then and only then introduce a targeted adapter mechanism. Document what the profile couldn't handle and why.
 
 If adapters are needed, they belong to the consuming repo, not the Flow shared skill. Examples of possible adapter types:
 
@@ -206,15 +206,15 @@ Done when:
 - validation passes
 - no untracked skill directories remain
 
-### Phase 2: Validate Bucket A Against Awadoc
+### Phase 2: Validate Bucket A Against pilot-project-b
 
 Goal: get real downstream signal before promoting more skills or designing adapters.
 
 Tasks:
 
-1. Install Flow into Awadoc (`node tools/flow-install/index.mjs --yes --target /path/to/awadoc`).
-2. Create a minimal `.flow/delivery-profile.json` for Awadoc using the template at `.jarvis/context/templates/flow-delivery-profile.json`.
-3. Classify each Bucket A skill against Awadoc:
+1. Install Flow into pilot-project-b (`node tools/flow-install/index.mjs --yes --target /path/to/pilot-project-b`).
+2. Create a minimal `.flow/delivery-profile.json` for pilot-project-b using the template at `.jarvis/context/templates/flow-delivery-profile.json`.
+3. Classify each Bucket A skill against pilot-project-b:
    - works as-is
    - works with profile only
    - not suitable for this repo type (expected for browser-first skills)
@@ -222,7 +222,7 @@ Tasks:
 
 Done when:
 
-- each Bucket A skill has a portability classification anchored in Awadoc evidence
+- each Bucket A skill has a portability classification anchored in pilot-project-b evidence
 
 ### Phase 3: Promote the Net-New Generic Skills (Bucket B)
 
@@ -259,9 +259,9 @@ Goal: prove the CI/workflow skills work outside AA.
 
 Tasks:
 
-1. Reinstall Flow into Awadoc to pick up Bucket B skills.
-2. Test `ci-logs`, `ci-rerun`, `ci-watch` against Awadoc's CI (if applicable).
-3. Test `local-run` against Awadoc's dev server setup.
+1. Reinstall Flow into pilot-project-b to pick up Bucket B skills.
+2. Test `ci-logs`, `ci-rerun`, `ci-watch` against pilot-project-b's CI (if applicable).
+3. Test `local-run` against pilot-project-b's dev server setup.
 4. Document portability notes.
 
 Adapter decision point: if any skill fails purely because the delivery profile cannot express a needed configuration, then and only then introduce a targeted adapter mechanism. Document what the profile couldn't handle and why.
@@ -316,11 +316,11 @@ Done when:
 | `build-e2e` | A | Extracted | Flow canonical, ready to commit |
 | `tech-spec-review` | A | Extracted | Flow canonical, ready to commit |
 | `browser-qa` | A | Extracted | Flow canonical, ready to commit |
-| `context-sync` | A | Extracted | Flow canonical, wrapper need TBD by Awadoc evidence |
-| `issue-flow` | A | Extracted | Flow canonical, wrapper need TBD by Awadoc evidence |
-| `spec-to-regression` | A | Extracted | Flow canonical, adapter need TBD by Awadoc evidence |
-| `api-integration-codegen` | A | Extracted | Flow canonical, adapter need TBD by Awadoc evidence |
-| `browser-integration-codegen` | A | Extracted | Flow canonical, adapter need TBD by Awadoc evidence |
+| `context-sync` | A | Extracted | Flow canonical, wrapper need TBD by pilot-project-b evidence |
+| `issue-flow` | A | Extracted | Flow canonical, wrapper need TBD by pilot-project-b evidence |
+| `spec-to-regression` | A | Extracted | Flow canonical, adapter need TBD by pilot-project-b evidence |
+| `api-integration-codegen` | A | Extracted | Flow canonical, adapter need TBD by pilot-project-b evidence |
+| `browser-integration-codegen` | A | Extracted | Flow canonical, adapter need TBD by pilot-project-b evidence |
 | `test-quality-validator` | A | Extracted | Flow canonical, one cosmetic fix needed (`supabase-guard` string) |
 | `tmux-agent-launcher` | A | Extracted | Flow canonical, ready to commit |
 | `ci-logs` | B | Promoted, pending commit | New shared skill |
@@ -344,7 +344,7 @@ At minimum, each promotion wave must end with:
 And for promotion correctness:
 
 - source repo behavior verified in AA
-- downstream portability assessed in Awadoc
+- downstream portability assessed in pilot-project-b
 - no hidden AA-specific assumptions left in Flow shared skills
 
 ---
@@ -355,7 +355,7 @@ And for promotion correctness:
 |---|---|---|
 | AA assumptions leak into Flow shared skills | HIGH | Enforce profile/adapter review before promotion |
 | Flow shared skills diverge from useful AA wrappers | MEDIUM | Split-core-wrapper pattern instead of full duplication |
-| Awadoc cannot consume promoted skills | HIGH | Use downstream validation as a hard gate, not a post-hoc note |
+| pilot-project-b cannot consume promoted skills | HIGH | Use downstream validation as a hard gate, not a post-hoc note |
 | GitHub/Supabase/provider-specific automation becomes too opinionated | MEDIUM | Keep provider-specific or board-specific assumptions optional or local |
 | AA remains a parallel source of truth after promotion | MEDIUM | Adopt shared versions back into AA and prune duplicate local implementations |
 | Untracked skills rot in the working tree | HIGH | Commit Bucket A skills immediately in Phase 1 — they are at risk of accidental loss |
@@ -363,19 +363,19 @@ And for promotion correctness:
 | Single-maintainer bottleneck slows execution | MEDIUM | Keep phases small and independently shippable; avoid gating everything on one reviewer |
 | Regression Artifact Standard is too vague to validate against | MEDIUM | Harden the standard with format examples and sample artifacts (Phase 6) |
 | No rollback plan if a promoted skill breaks AA after local deletion | HIGH | Verify shared version passes AA validation before deleting any local skill; keep local version as fallback |
-| Awadoc lacks `.flow/delivery-profile.json` and is not ready as a validation target | MEDIUM | Budget time to create a minimal Awadoc profile in Phase 2 using the existing template |
+| pilot-project-b lacks `.flow/delivery-profile.json` and is not ready as a validation target | MEDIUM | Budget time to create a minimal pilot-project-b profile in Phase 2 using the existing template |
 
 ---
 
 ## Deliverables
 
 1. Committed Bucket A skills (10 skills) with clean validation and registration.
-2. Awadoc portability classification for each Bucket A skill, anchored in evidence.
+2. pilot-project-b portability classification for each Bucket A skill, anchored in evidence.
 3. Promoted Bucket B skills (6 skills) in `tools/flow-install/skills/`, committed and validated.
-4. Awadoc portability notes for each Bucket B skill.
+4. pilot-project-b portability notes for each Bucket B skill.
 5. AA cleanup: shared versions adopted, local duplicates deleted, thin wrappers where needed.
 6. Hardened Regression Artifact Standard with format examples and sample artifacts.
-7. Adapter mechanism documented and implemented only if Awadoc evidence requires it (may be empty deliverable).
+7. Adapter mechanism documented and implemented only if pilot-project-b evidence requires it (may be empty deliverable).
 
 ---
 
@@ -387,7 +387,7 @@ Proceed with full standardization intent:
 - abstract where necessary
 - keep local-only only when the behavior is fundamentally project- or provider-specific
 - use Flow as the canonical distribution layer
-- use AA as the proving ground and Awadoc as the portability check
+- use AA as the proving ground and pilot-project-b as the portability check
 - commit Bucket A immediately — do not let extracted work sit as untracked files
 - validate downstream before designing adapters — evidence over speculation
 - keep phases independently shippable — each phase produces a commit or documented finding

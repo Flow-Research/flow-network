@@ -215,6 +215,5 @@ Don't build all three systems at once. Validate the economics with the simplest 
 
 - `docs/flow-deep-system-analysis.md` — Strategic analysis of the full vision
 - `docs/flow-v1-unit-economics-model-appendix.md` — Unit economics model
-- `partnerships/accelerate-africa/` — Accelerate Africa partnership docs
 - AnyType: "15 - The Flow Project" — Vision, flywheel, funding mechanisms
 - AnyType: "Flow: Design Brief" — UX design, user journey, phased functionality

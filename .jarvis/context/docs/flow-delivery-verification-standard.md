@@ -29,11 +29,11 @@ Check that shared skills consume only:
 
 ### 3. Source-repo behavior
 
-Verify that the standardized Flow version still supports the reference repo workflow in `Accelerate Africa`.
+Verify that the standardized Flow version still supports the reference repo workflow in pilot projects.
 
 ### 4. Downstream portability
 
-Verify that a different Flow repo such as `Awadoc` can consume the standardized skill set using only configuration and project-local adapters.
+Verify that a different Flow repo such as `pilot-project-b` can consume the standardized skill set using only configuration and project-local adapters.
 
 ### 5. Artifact correctness
 
